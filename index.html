@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="en-US">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="description" content="Generates spiral graph plots.">
+  <meta name="keywords" content="HTML, JavaScript, Bootstrap, Font Awesome">
+  <meta name="author" content="SpringTimeCode">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="media-src 'self' blob:;">
+  <title>SpiroJS - Animated Spiral Circle Graphs</title>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+    crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css" rel="stylesheet">
+  <link rel="icon" type="image/png" sizes="32x32" href="FAVICON.PNG">
+</head>
+
+<body class="bg-body">
+
+  <div class="container bg-body p-1">
+    <div class="row">
+      <div class="col-lg-12 p-1">
+        <div class="card">
+          <div class="card-header" style="height: 45px;">
+            <h5><img src="favicon.svg" width="25" height="25" class="d-inline-block align-top" alt="SpiroJS"
+                style="border-radius: 15px;"> SpiroJS</h5>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-6 p-1">
+        <div class="card">
+          <div class="card-header">
+            Plot Settings
+          </div>
+          <div class="card-body">
+            <div class="row p-3">
+              <div class="col-3 p-1">
+                <label for="lineLengthRange" class="form-label">Line Length:</label>
+              </div>
+              <div class="col-9 p-1">
+                <input type="range" class="form-range" min="0.01" max="3" step="0.001" id="lineLengthRange"
+                  value="0.15">
+                <span id="lineLengthRangeValue" aria-hidden="true"></span>
+              </div>
+            </div>
+            <div class="row p-3">
+              <div class="col-3 p-1">
+                <label for="saturationRange" class="form-label">Saturation Level:</label>
+              </div>
+              <div class="col-9 p-1">
+                <input type="range" class="form-range" min="1" max="360" step="1" id="saturationRange" value="50">
+                <span id="saturationRangeValue" aria-hidden="true"></span>
+              </div>
+            </div>
+            <div class="row p-3">
+              <div class="col-3 p-1">
+                <label for="plotSizeRange" class="form-label">Plot Size:</label>
+              </div>
+              <div class="col-9 p-1">
+                <input type="range" class="form-range" min="10" max="100" step="1" id="plotSizeRange" value="90">
+                <span id="plotSizeRangeValue" aria-hidden="true"></span>
+              </div>
+            </div>
+            <div class="row p-3">
+              <div class="col-3 p-1">
+                <label for="plotSpeedRange" class="form-label">Plot Speed:</label>
+              </div>
+              <div class="col-9 p-1">
+                <input type="range" class="form-range" min="1" max="20" step="1" id="plotSpeedRange" value="15">
+                <span id="plotSpeedRangeValue" aria-hidden="true"></span>
+              </div>
+            </div>
+            <div class="row p-3">
+              <div class="col-3 p-1">
+                <label for="multiplierRange" class="form-label">Loop Multiplier:</label>
+              </div>
+              <div class="col-9 p-1">
+                <input type="range" class="form-range" min="0" max="20" step="0.0001" id="multiplierRange" value="1.3">
+                <span id="multiplierRangeValue" aria-hidden="true"></span>
+              </div>
+            </div>
+            <div class="row p-3">
+              <div class="col-12 p-1 text-center">
+                <button id="backwardButton" class="col-2 btn btn-outline-primary text-nowrap"><span><i
+                      class="fa-classic fa-solid fa-caret-left fa-lg"></i></span></button>
+                <button id="forwardButton" class="col-2 btn btn-outline-primary text-nowrap"><span><i
+                      class="fa-classic fa-solid fa-caret-right fa-lg"></i></span></button>
+                <button id="stopButton" class="col-2 btn btn-outline-primary text-nowrap"><span><i
+                      class="fa-classic fa-solid fa-stop"></i></span> </button>
+                <button id="themeToggleButton" class="col-2 btn btn-outline-primary text-nowrap"><span
+                    id="themeToggleIconLight" style="display: block"><i
+                      class="fa-classic fa-solid fa-sun"></i></span><span id="themeToggleIconDark"
+                    style="display: none"><i class="fa-classic fa-solid fa-moon"></i></span></button>
+              </div>
+              <div class="col-12 p-1 text-center">
+                <button id="copyButton" class="col-2 btn btn-outline-primary text-nowrap"><span><i
+                      class="fa-classic fa-solid fa-copy"></i></span></button>
+                <button id="imageButton" class="col-2 btn btn-outline-primary text-nowrap"><span><i
+                      class="fa-classic fa-solid fa-camera"></i></span></button>
+                <button id="recordButton" class="col-2 btn btn-outline-danger text-nowrap"><span><i
+                      class="fa-classic fa-solid fa-video"></i></span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6 p-1">
+        <div class="card">
+          <div class="card-header">
+            Plot Canvas
+          </div>
+          <div class="card-body" id="canvasDiv" style="padding: 0px">
+            <canvas id="canvas" width="600" height="555"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="copyToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header">
+        <strong class="me-auto">URL Copied!</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div class="toast-body" id="copyToastBody" style="white-space: pre;">
+        URL with plot settings copied to the clipboard.
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="imageToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header">
+        <strong class="me-auto">Image Copied!</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div class="toast-body" id="imageToastBody" style="white-space: pre;">
+        Image copied to the clipboard.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    class SpiroGraph {
+      constructor() {
+        // UI Elements
+        this.ui = {
+          multiplier: { input: document.getElementById('multiplierRange'), output: document.getElementById('multiplierRangeValue') },
+          saturation: { input: document.getElementById('saturationRange'), output: document.getElementById('saturationRangeValue') },
+          lineLength: { input: document.getElementById('lineLengthRange'), output: document.getElementById('lineLengthRangeValue') },
+          plotSpeed: { input: document.getElementById('plotSpeedRange'), output: document.getElementById('plotSpeedRangeValue') },
+          plotSize: { input: document.getElementById('plotSizeRange'), output: document.getElementById('plotSizeRangeValue') },
+          buttons: {
+            forward: document.getElementById('forwardButton'),
+            backward: document.getElementById('backwardButton'),
+            stop: document.getElementById('stopButton'),
+            copy: document.getElementById('copyButton'),
+            image: document.getElementById('imageButton'),
+            record: document.getElementById('recordButton'),
+            theme: document.getElementById('themeToggleButton')
+          },
+          themeIcons: {
+            light: document.getElementById('themeToggleIconLight'),
+            dark: document.getElementById('themeToggleIconDark')
+          },
+          canvasDiv: document.getElementById('canvasDiv'),
+          canvas: document.getElementById("canvas"),
+          toasts: {
+            copy: new bootstrap.Toast(document.getElementById('copyToast'), { autohide: true, delay: 4000 }),
+            copyBody: document.getElementById('copyToastBody'),
+            image: new bootstrap.Toast(document.getElementById('imageToast'), { autohide: true, delay: 4000 }),
+            imageBody: document.getElementById('imageToastBody')
+          }
+        };
+
+        // State
+        this.state = {
+          multiplier: 1.3,
+          saturation: 50,
+          lineLength: 0.15,
+          plotSpeed: 15,
+          plotSize: 90,
+          theme: 'light',
+          isLoopRunning: false,
+          loopDirection: 'Forward',
+          strokeColor: '#000000',
+          isRecording: false
+        };
+
+        this.animationId = null;
+        this.lastFrameTime = 0;
+        this.mediaRecorder = null;
+        this.recordedChunks = [];
+        this.recordingTimeout = null;
+
+        this.init();
+      }
+
+      init() {
+        this.loadFromURL();
+        this.setupEventListeners();
+        this.resizeCanvas();
+        this.updateUI();
+        this.draw();
+        // Initial state: disabled because loop is not running
+        this.ui.buttons.record.disabled = true;
+      }
+
+      loadFromURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+
+        const getParam = (name, min, max, parser = parseFloat) => {
+          if (urlParams.has(name)) {
+            const val = parser(urlParams.get(name));
+            if (!isNaN(val) && val >= min && val <= max) return val;
+          }
+          return null;
+        };
+
+        this.state.multiplier = getParam('Multiplier', 0, 20) ?? this.state.multiplier;
+        this.state.saturation = getParam('Saturation', 1, 360) ?? this.state.saturation;
+        this.state.lineLength = getParam('LineLength', 0.01, 3) ?? this.state.lineLength;
+        this.state.plotSpeed = getParam('PlotSpeed', 1, 20) ?? this.state.plotSpeed;
+        this.state.plotSize = getParam('PlotSize', 10, 100) ?? this.state.plotSize;
+
+        if (urlParams.has('Theme')) {
+          const theme = urlParams.get('Theme').toLowerCase();
+          if (theme === 'dark' || theme === 'light') {
+            this.state.theme = theme;
+          }
+        }
+
+        this.applyTheme();
+      }
+
+      applyTheme() {
+        document.documentElement.setAttribute('data-bs-theme', this.state.theme);
+        if (this.state.theme === 'light') {
+          this.ui.themeIcons.light.style.display = 'block';
+          this.ui.themeIcons.dark.style.display = 'none';
+          this.state.strokeColor = "#000000";
+        } else {
+          this.ui.themeIcons.light.style.display = 'none';
+          this.ui.themeIcons.dark.style.display = 'block';
+          this.state.strokeColor = "#FFFFFF";
+        }
+      }
+
+      setupEventListeners() {
+        // Range Inputs
+        this.ui.multiplier.input.addEventListener('input', (e) => this.handleInput('multiplier', e.target.value));
+        this.ui.saturation.input.addEventListener('input', (e) => this.handleInput('saturation', e.target.value));
+        this.ui.lineLength.input.addEventListener('input', (e) => this.handleInput('lineLength', e.target.value));
+        this.ui.plotSize.input.addEventListener('input', (e) => this.handleInput('plotSize', e.target.value));
+        this.ui.plotSpeed.input.addEventListener('input', (e) => {
+          this.state.plotSpeed = parseFloat(e.target.value);
+          this.updateUI(); // Update label
+        });
+
+        // Buttons
+        this.ui.buttons.forward.addEventListener('click', () => this.toggleLoop('Forward'));
+        this.ui.buttons.backward.addEventListener('click', () => this.toggleLoop('Backward'));
+        this.ui.buttons.stop.addEventListener('click', () => this.stopLoop());
+        this.ui.buttons.theme.addEventListener('click', () => this.toggleTheme());
+        this.ui.buttons.copy.addEventListener('click', () => this.copyToClipboard());
+        this.ui.buttons.image.addEventListener('click', () => this.saveImage());
+        this.ui.buttons.record.addEventListener('click', () => this.toggleRecording());
+
+        // Window
+        window.addEventListener('resize', () => {
+          this.resizeCanvas();
+          this.draw();
+        });
+      }
+
+      handleInput(key, value) {
+        this.state[key] = parseFloat(value);
+        this.updateUI();
+        if (!this.state.isLoopRunning) {
+          this.draw();
+        }
+      }
+
+      updateUI() {
+        // Update Range Inputs and Labels
+        this.ui.multiplier.input.value = this.state.multiplier;
+        this.ui.multiplier.output.textContent = 'Loop Multiplier: ' + this.state.multiplier.toFixed(4);
+
+        this.ui.saturation.input.value = this.state.saturation;
+        this.ui.saturation.output.textContent = 'Saturation Level: ' + this.state.saturation;
+
+        this.ui.lineLength.input.value = this.state.lineLength.toFixed(3); // Input expects string for precision sometimes
+        this.ui.lineLength.output.textContent = 'Line Length: ' + this.state.lineLength.toFixed(3);
+
+        this.ui.plotSize.input.value = this.state.plotSize;
+        this.ui.plotSize.output.textContent = 'Plot Size: ' + this.state.plotSize.toFixed(0);
+
+        this.ui.plotSpeed.input.value = this.state.plotSpeed;
+        this.ui.plotSpeed.output.textContent = 'Plot Speed: ' + this.state.plotSpeed;
+
+        // Update Button States
+        this.ui.buttons.forward.classList.toggle('active', this.state.isLoopRunning && this.state.loopDirection === 'Forward');
+        this.ui.buttons.backward.classList.toggle('active', this.state.isLoopRunning && this.state.loopDirection === 'Backward');
+        this.ui.buttons.stop.classList.toggle('active', !this.state.isLoopRunning);
+      }
+
+      updateRecordButton() {
+        // Recording Button State
+        if (this.state.isRecording) {
+          this.ui.buttons.record.classList.add('btn-danger');
+          this.ui.buttons.record.classList.remove('btn-outline-danger');
+          this.ui.buttons.record.innerHTML = '<span><i class="fa-classic fa-solid fa-stop"></i></span>';
+        } else {
+          this.ui.buttons.record.classList.remove('btn-danger');
+          this.ui.buttons.record.classList.add('btn-outline-danger');
+          this.ui.buttons.record.innerHTML = '<span><i class="fa-classic fa-solid fa-video"></i></span>';
+        }
+      }
+
+      resizeCanvas() {
+        this.ui.canvas.width = this.ui.canvasDiv.offsetWidth - 4;
+        this.ui.canvas.height = this.ui.canvasDiv.offsetWidth * 0.945;
+      }
+
+      toggleTheme() {
+        this.state.theme = this.state.theme === 'light' ? 'dark' : 'light';
+        this.applyTheme();
+        this.draw();
+      }
+
+      toggleLoop(direction) {
+        if (this.state.isLoopRunning && this.state.loopDirection === direction) {
+          this.stopLoop();
+        } else {
+          this.state.loopDirection = direction;
+          if (!this.state.isLoopRunning) {
+            this.state.isLoopRunning = true;
+            this.lastFrameTime = performance.now();
+            this.loop();
+          }
+          this.updateUI();
+          this.ui.buttons.record.disabled = false;
+        }
+      }
+
+      stopLoop() {
+        this.state.isLoopRunning = false;
+        if (this.animationId) {
+          cancelAnimationFrame(this.animationId);
+          this.animationId = null;
+        }
+        this.updateUI();
+
+        // Disable record button and stop recording if active
+        this.ui.buttons.record.disabled = true;
+        if (this.state.isRecording) {
+          this.stopRecording();
+          alert("Recording stopped because animation stopped.");
+        }
+      }
+
+      toggleRecording() {
+        if (this.state.isRecording) {
+          this.stopRecording();
+        } else {
+          this.startRecording();
+        }
+      }
+
+      startRecording() {
+        try {
+          const stream = this.ui.canvas.captureStream(30); // 30 FPS
+
+          let mimeType = 'video/webm';
+          if (!MediaRecorder.isTypeSupported(mimeType)) {
+            console.warn(`${mimeType} is not supported, trying video/mp4`);
+            mimeType = 'video/mp4';
+            if (!MediaRecorder.isTypeSupported(mimeType)) {
+              console.error('No supported video mime type found');
+              alert('Video recording is not supported in this browser.');
+              return;
+            }
+          }
+
+          this.mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType });
+          this.recordedChunks = [];
+
+          this.mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+              this.recordedChunks.push(event.data);
+            }
+          };
+
+          this.mediaRecorder.onstop = () => {
+            this.downloadVideo(mimeType);
+          };
+
+          this.mediaRecorder.start();
+          this.state.isRecording = true;
+          this.updateRecordButton();
+
+          // Auto-stop after 5 minutes (300,000 ms)
+          this.recordingTimeout = setTimeout(() => {
+            if (this.state.isRecording) {
+              this.stopRecording();
+              alert("Recording stopped automatically after 5 minutes.");
+            }
+          }, 300000);
+
+        } catch (err) {
+          console.error("Error starting recording:", err);
+          this.state.isRecording = false;
+          this.updateRecordButton();
+          alert("Failed to start recording. See console for details.");
+        }
+      }
+
+      stopRecording() {
+        if (this.mediaRecorder && this.state.isRecording) {
+          this.mediaRecorder.stop();
+          this.state.isRecording = false;
+          this.updateRecordButton();
+
+          if (this.recordingTimeout) {
+            clearTimeout(this.recordingTimeout);
+            this.recordingTimeout = null;
+          }
+        }
+      }
+
+      downloadVideo(mimeType) {
+        const blob = new Blob(this.recordedChunks, { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        // Extension based on mimeType
+        const ext = mimeType.split('/')[1] || 'webm';
+        a.download = `spirograph-recording.${ext}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+
+      loop(timestamp) {
+        if (!this.state.isLoopRunning) return;
+
+        const delay = Math.max(20 - this.state.plotSpeed, 1);
+
+        if (!this.lastFrameTime) this.lastFrameTime = timestamp;
+        const elapsed = timestamp - this.lastFrameTime;
+
+        if (elapsed >= delay) {
+          const increment = this.state.loopDirection === 'Forward' ? 0.0001 : -0.0001;
+          this.state.multiplier += increment;
+
+          // Boundary checks
+          if (this.state.loopDirection === 'Forward' && this.state.multiplier > 20) {
+            this.state.multiplier = 0;
+          } else if (this.state.loopDirection === 'Backward' && this.state.multiplier <= 0) {
+            this.state.multiplier = 20;
+          }
+
+          this.updateUI();
+          this.draw();
+          this.lastFrameTime = timestamp;
+        }
+
+        this.animationId = requestAnimationFrame((t) => this.loop(t));
+      }
+
+      draw() {
+        const ctx = this.ui.canvas.getContext("2d");
+        if (!ctx) return;
+
+        const width = this.ui.canvas.width;
+        const height = this.ui.canvas.height;
+        const radiusScale = width * 0.925 * (this.state.plotSize / 100);
+        const center = width / 2;
+
+        // Fill background to prevent blank video
+        ctx.fillStyle = this.state.theme === 'light' ? '#ffffff' : '#212529'; // Bootstrap dark body color
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.strokeStyle = this.state.strokeColor;
+        ctx.beginPath(); // Batch all lines into one path for performance
+
+        let firstPoint = true;
+
+        for (let i = this.state.lineLength; i <= this.state.saturation; i += this.state.lineLength) {
+          const radius = radiusScale * Math.cos(this.state.multiplier * i);
+          const x = (((radius * Math.sin(i)) / Math.PI) * 1.55) + center;
+          const y = ((radius * Math.cos(i)) / 2) + (center * 0.95);
+
+          if (firstPoint) {
+            ctx.moveTo(x, y);
+            firstPoint = false;
+          } else {
+            ctx.lineTo(x, y);
+          }
+        }
+
+        ctx.stroke();
+      }
+
+      async copyToClipboard() {
+        const params = new URLSearchParams({
+          Multiplier: this.state.multiplier,
+          Saturation: this.state.saturation,
+          LineLength: this.state.lineLength,
+          PlotSpeed: this.state.plotSpeed,
+          PlotSize: this.state.plotSize,
+          Theme: this.state.theme
+        });
+
+        const shareURL = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+        const description = `URL with plot settings copied to the clipboard:\n` +
+          `Loop Multiplier: ${this.state.multiplier}\n` +
+          `Saturation Level: ${this.state.saturation}\n` +
+          `Line Length: ${this.state.lineLength}\n` +
+          `Plot Speed: ${this.state.plotSpeed}\n` +
+          `Plot Size: ${this.state.plotSize}\n` +
+          `Theme: ${this.state.theme}`;
+
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(shareURL);
+          } else {
+            // Fallback for non-secure contexts
+            const textArea = document.createElement("textarea");
+            textArea.value = shareURL;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+              document.execCommand('copy');
+            } catch (err) {
+              console.error('Fallback: Oops, unable to copy', err);
+            }
+            document.body.removeChild(textArea);
+          }
+          this.ui.toasts.copyBody.textContent = description;
+          this.ui.toasts.copy.show();
+        } catch (err) {
+          console.error('Failed to copy URL:', err);
+        }
+      }
+
+      async saveImage() {
+        try {
+          const blob = await new Promise(resolve => this.ui.canvas.toBlob(resolve, 'image/png'));
+
+          if (navigator.clipboard && navigator.clipboard.write && window.ClipboardItem) {
+            try {
+              const clipboardItem = new ClipboardItem({ [blob.type]: blob });
+              await navigator.clipboard.write([clipboardItem]);
+              this.ui.toasts.imageBody.textContent = "Image copied to the clipboard.";
+              this.ui.toasts.image.show();
+              return;
+            } catch (err) {
+              console.warn("Clipboard write failed, falling back to download.", err);
+            }
+          }
+
+          // Fallback: Download image
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'spirograph.png';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+
+          this.ui.toasts.imageBody.textContent = "Image downloaded (Clipboard unavailable).";
+          this.ui.toasts.image.show();
+
+        } catch (error) {
+          console.error('Failed to save image:', error);
+        }
+      }
+    }
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', () => {
+      window.spiroGraph = new SpiroGraph();
+    });
+
+  </script>
+</body>
+
+</html>
