@@ -97,6 +97,8 @@
                     id="themeToggleIconLight" style="display: block"><i
                       class="fa-classic fa-solid fa-sun"></i></span><span id="themeToggleIconDark"
                     style="display: none"><i class="fa-classic fa-solid fa-moon"></i></span></button>
+                <button id="fullScreenButton" class="col-2 btn btn-outline-primary text-nowrap"><span><i
+                      class="fa-classic fa-solid fa-expand"></i></span></button>
               </div>
               <div class="col-12 p-1 text-center">
                 <button id="copyButton" class="col-2 btn btn-outline-primary text-nowrap"><span><i
@@ -105,8 +107,6 @@
                       class="fa-classic fa-solid fa-camera"></i></span></button>
                 <button id="recordButton" class="col-2 btn btn-outline-danger text-nowrap"><span><i
                       class="fa-classic fa-solid fa-video"></i></span></button>
-                <button id="fullScreenButton" class="col-2 btn btn-outline-primary text-nowrap"><span><i
-                      class="fa-classic fa-solid fa-expand"></i></span></button>
                 <span id="recordingTimer" class="col-2 btn btn-outline-secondary disabled">5:00</span>
               </div>
             </div>
@@ -120,7 +120,8 @@
           </div>
           <div class="card-body" id="canvasDiv" style="padding: 0px; position: relative;">
             <button id="exitFullScreenButton" class="btn btn-outline-secondary position-absolute top-0 end-0 m-3 d-none"
-              style="z-index: 1050;"><span><i class="fa-classic fa-solid fa-compress"></i> Exit</span></button>
+              style="z-index: 1050; transition: opacity 0.5s ease-in-out;"><span><i
+                  class="fa-classic fa-solid fa-compress"></i> Exit</span></button>
             <canvas id="canvas" width="600" height="555"></canvas>
           </div>
         </div>
@@ -208,6 +209,8 @@
         this.recordedChunks = [];
         this.recordingTimeout = null;
         this.timerInterval = null;
+        this.mouseMoveTimeout = null;
+        this.handleMouseMoveBound = this.handleMouseMove.bind(this); // Bind for event listener removal
 
         this.init();
       }
@@ -286,6 +289,9 @@
 
         // Fullscreen Change
         document.addEventListener('fullscreenchange', () => this.handleFullScreenChange());
+        document.addEventListener('webkitfullscreenchange', () => this.handleFullScreenChange());
+        document.addEventListener('mozfullscreenchange', () => this.handleFullScreenChange());
+        document.addEventListener('MSFullscreenChange', () => this.handleFullScreenChange());
 
         // Window
         window.addEventListener('resize', () => {
@@ -339,7 +345,7 @@
       }
 
       resizeCanvas() {
-        if (document.fullscreenElement) {
+        if (this.getFullscreenElement()) {
           this.ui.canvas.width = window.innerWidth;
           this.ui.canvas.height = window.innerHeight;
         } else {
@@ -349,25 +355,63 @@
       }
 
       handleFullScreenChange() {
-        if (document.fullscreenElement) {
+        if (this.getFullscreenElement()) {
           this.ui.buttons.exitFullScreen.classList.remove('d-none');
           this.ui.canvasDiv.classList.add('bg-body'); // Ensure background is set
+
+          // Start tracking mouse movement
+          document.addEventListener('mousemove', this.handleMouseMoveBound);
+          this.handleMouseMove(); // Trigger once to show button initially
         } else {
           this.ui.buttons.exitFullScreen.classList.add('d-none');
           this.ui.canvasDiv.classList.remove('bg-body');
+
+          // Stop tracking
+          document.removeEventListener('mousemove', this.handleMouseMoveBound);
+          if (this.mouseMoveTimeout) {
+            clearTimeout(this.mouseMoveTimeout);
+            this.mouseMoveTimeout = null;
+          }
+          this.ui.buttons.exitFullScreen.style.opacity = '1'; // Reset for next time
         }
         this.resizeCanvas();
         this.draw();
       }
 
-      toggleFullScreen() {
-        if (!document.fullscreenElement) {
-          this.ui.canvasDiv.requestFullscreen().catch(err => {
-            alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-          });
-        } else {
-          document.exitFullscreen();
+      handleMouseMove() {
+        this.ui.buttons.exitFullScreen.style.opacity = '1';
+
+        if (this.mouseMoveTimeout) {
+          clearTimeout(this.mouseMoveTimeout);
         }
+
+        this.mouseMoveTimeout = setTimeout(() => {
+          if (this.getFullscreenElement()) {
+            this.ui.buttons.exitFullScreen.style.opacity = '0';
+          }
+        }, 3000);
+      }
+
+      toggleFullScreen() {
+        if (!this.getFullscreenElement()) {
+          const canvasDiv = this.ui.canvasDiv;
+          if (canvasDiv.requestFullscreen) canvasDiv.requestFullscreen().catch(err => alert(`Error: ${err.message}`));
+          else if (canvasDiv.webkitRequestFullscreen) canvasDiv.webkitRequestFullscreen();
+          else if (canvasDiv.mozRequestFullScreen) canvasDiv.mozRequestFullScreen();
+          else if (canvasDiv.msRequestFullscreen) canvasDiv.msRequestFullscreen();
+        } else {
+          if (document.exitFullscreen) document.exitFullscreen();
+          else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+          else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+          else if (document.msExitFullscreen) document.msExitFullscreen();
+        }
+      }
+
+      getFullscreenElement() {
+        return document.fullscreenElement ||
+          document.webkitFullscreenElement ||
+          document.mozFullScreenElement ||
+          document.msFullscreenElement;
       }
 
       toggleTheme() {
