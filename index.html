@@ -105,6 +105,7 @@
                       class="fa-classic fa-solid fa-camera"></i></span></button>
                 <button id="recordButton" class="col-2 btn btn-outline-danger text-nowrap"><span><i
                       class="fa-classic fa-solid fa-video"></i></span></button>
+                <span id="recordingTimer" class="col-2 btn btn-outline-secondary disabled">5:00</span>
               </div>
             </div>
           </div>
@@ -166,6 +167,7 @@
             record: document.getElementById('recordButton'),
             theme: document.getElementById('themeToggleButton')
           },
+          timer: document.getElementById('recordingTimer'),
           themeIcons: {
             light: document.getElementById('themeToggleIconLight'),
             dark: document.getElementById('themeToggleIconDark')
@@ -199,6 +201,7 @@
         this.mediaRecorder = null;
         this.recordedChunks = [];
         this.recordingTimeout = null;
+        this.timerInterval = null;
 
         this.init();
       }
@@ -406,6 +409,9 @@
           this.state.isRecording = true;
           this.updateRecordButton();
 
+          // Start Timer
+          this.startTimer(300); // 5 minutes
+
           // Auto-stop after 5 minutes (300,000 ms)
           this.recordingTimeout = setTimeout(() => {
             if (this.state.isRecording) {
@@ -432,7 +438,43 @@
             clearTimeout(this.recordingTimeout);
             this.recordingTimeout = null;
           }
+          this.stopTimer();
         }
+      }
+
+      startTimer(durationSeconds) {
+        this.ui.timer.classList.remove('btn-outline-secondary');
+        this.ui.timer.classList.add('btn-outline-danger');
+
+        const endTime = Date.now() + durationSeconds * 1000;
+
+        this.updateTimerDisplay(durationSeconds);
+
+        this.timerInterval = setInterval(() => {
+          const remaining = Math.ceil((endTime - Date.now()) / 1000);
+          if (remaining <= 0) {
+            this.updateTimerDisplay(0);
+            this.stopTimer();
+          } else {
+            this.updateTimerDisplay(remaining);
+          }
+        }, 1000);
+      }
+
+      stopTimer() {
+        if (this.timerInterval) {
+          clearInterval(this.timerInterval);
+          this.timerInterval = null;
+        }
+        this.ui.timer.classList.remove('btn-outline-danger');
+        this.ui.timer.classList.add('btn-outline-secondary');
+        this.ui.timer.textContent = '5:00';
+      }
+
+      updateTimerDisplay(seconds) {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        this.ui.timer.textContent = `${m}:${s.toString().padStart(2, '0')}`;
       }
 
       downloadVideo(mimeType) {
@@ -441,13 +483,28 @@
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
-        // Extension based on mimeType
-        const ext = mimeType.split('/')[1] || 'webm';
-        a.download = `spirograph-recording.${ext}`;
+
+        // Generate timestamp
+        const now = new Date();
+        const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
+
+        // Extension based on mimeType (handle codecs parameter)
+        let ext = 'webm';
+        if (mimeType.includes('mp4')) {
+          ext = 'mp4';
+        } else if (mimeType.includes('webm')) {
+          ext = 'webm';
+        }
+
+        a.download = `spirograph-${timestamp}.${ext}`;
         document.body.appendChild(a);
         a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+
+        // Delay revocation to ensure filename is captured (Chrome issue)
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        }, 100);
       }
 
       loop(timestamp) {
