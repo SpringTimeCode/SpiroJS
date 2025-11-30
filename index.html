@@ -105,6 +105,8 @@
                       class="fa-classic fa-solid fa-camera"></i></span></button>
                 <button id="recordButton" class="col-2 btn btn-outline-danger text-nowrap"><span><i
                       class="fa-classic fa-solid fa-video"></i></span></button>
+                <button id="fullScreenButton" class="col-2 btn btn-outline-primary text-nowrap"><span><i
+                      class="fa-classic fa-solid fa-expand"></i></span></button>
                 <span id="recordingTimer" class="col-2 btn btn-outline-secondary disabled">5:00</span>
               </div>
             </div>
@@ -116,7 +118,9 @@
           <div class="card-header">
             Plot Canvas
           </div>
-          <div class="card-body" id="canvasDiv" style="padding: 0px">
+          <div class="card-body" id="canvasDiv" style="padding: 0px; position: relative;">
+            <button id="exitFullScreenButton" class="btn btn-outline-secondary position-absolute top-0 end-0 m-3 d-none"
+              style="z-index: 1050;"><span><i class="fa-classic fa-solid fa-compress"></i> Exit</span></button>
             <canvas id="canvas" width="600" height="555"></canvas>
           </div>
         </div>
@@ -165,6 +169,8 @@
             copy: document.getElementById('copyButton'),
             image: document.getElementById('imageButton'),
             record: document.getElementById('recordButton'),
+            fullScreen: document.getElementById('fullScreenButton'),
+            exitFullScreen: document.getElementById('exitFullScreenButton'),
             theme: document.getElementById('themeToggleButton')
           },
           timer: document.getElementById('recordingTimer'),
@@ -275,6 +281,11 @@
         this.ui.buttons.copy.addEventListener('click', () => this.copyToClipboard());
         this.ui.buttons.image.addEventListener('click', () => this.saveImage());
         this.ui.buttons.record.addEventListener('click', () => this.toggleRecording());
+        this.ui.buttons.fullScreen.addEventListener('click', () => this.toggleFullScreen());
+        this.ui.buttons.exitFullScreen.addEventListener('click', () => this.toggleFullScreen());
+
+        // Fullscreen Change
+        document.addEventListener('fullscreenchange', () => this.handleFullScreenChange());
 
         // Window
         window.addEventListener('resize', () => {
@@ -328,8 +339,35 @@
       }
 
       resizeCanvas() {
-        this.ui.canvas.width = this.ui.canvasDiv.offsetWidth - 4;
-        this.ui.canvas.height = this.ui.canvasDiv.offsetWidth * 0.945;
+        if (document.fullscreenElement) {
+          this.ui.canvas.width = window.innerWidth;
+          this.ui.canvas.height = window.innerHeight;
+        } else {
+          this.ui.canvas.width = this.ui.canvasDiv.offsetWidth - 4;
+          this.ui.canvas.height = this.ui.canvasDiv.offsetWidth * 0.945;
+        }
+      }
+
+      handleFullScreenChange() {
+        if (document.fullscreenElement) {
+          this.ui.buttons.exitFullScreen.classList.remove('d-none');
+          this.ui.canvasDiv.classList.add('bg-body'); // Ensure background is set
+        } else {
+          this.ui.buttons.exitFullScreen.classList.add('d-none');
+          this.ui.canvasDiv.classList.remove('bg-body');
+        }
+        this.resizeCanvas();
+        this.draw();
+      }
+
+      toggleFullScreen() {
+        if (!document.fullscreenElement) {
+          this.ui.canvasDiv.requestFullscreen().catch(err => {
+            alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+          });
+        } else {
+          document.exitFullscreen();
+        }
       }
 
       toggleTheme() {
@@ -540,8 +578,13 @@
 
         const width = this.ui.canvas.width;
         const height = this.ui.canvas.height;
-        const radiusScale = width * 0.925 * (this.state.plotSize / 100);
-        const center = width / 2;
+
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const minDim = Math.min(width, height);
+
+        // Scale based on the smaller dimension to fit screen
+        const radiusScale = minDim * 0.925 * (this.state.plotSize / 100);
 
         // Fill background to prevent blank video
         ctx.fillStyle = this.state.theme === 'light' ? '#ffffff' : '#212529'; // Bootstrap dark body color
@@ -554,8 +597,10 @@
 
         for (let i = this.state.lineLength; i <= this.state.saturation; i += this.state.lineLength) {
           const radius = radiusScale * Math.cos(this.state.multiplier * i);
-          const x = (((radius * Math.sin(i)) / Math.PI) * 1.55) + center;
-          const y = ((radius * Math.cos(i)) / 2) + (center * 0.95);
+
+          // Centered drawing logic
+          const x = (((radius * Math.sin(i)) / Math.PI) * 1.55) + centerX;
+          const y = ((radius * Math.cos(i)) / 2) + centerY;
 
           if (firstPoint) {
             ctx.moveTo(x, y);
