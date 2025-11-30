@@ -206,11 +206,23 @@
   <div class="toast-container position-fixed bottom-0 end-0 p-3">
     <div id="imageToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
       <div class="toast-header">
-        <strong class="me-auto">Image Copied!</strong>
+        <strong class="me-auto">Image Saved!</strong>
         <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
       </div>
       <div class="toast-body" id="imageToastBody" style="white-space: pre;">
-        Image copied to the clipboard.
+        Image saved to the downloads folder.
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="videoToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header">
+        <strong class="me-auto">Video Saved!</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div class="toast-body" id="videoToastBody" style="white-space: pre;">
+        Video saved to the downloads folder.
       </div>
     </div>
   </div>
@@ -261,7 +273,9 @@
             copy: new bootstrap.Toast(document.getElementById('copyToast'), { autohide: true, delay: 4000 }),
             copyBody: document.getElementById('copyToastBody'),
             image: new bootstrap.Toast(document.getElementById('imageToast'), { autohide: true, delay: 4000 }),
-            imageBody: document.getElementById('imageToastBody')
+            imageBody: document.getElementById('imageToastBody'),
+            video: new bootstrap.Toast(document.getElementById('videoToast'), { autohide: true, delay: 4000 }),
+            videoBody: document.getElementById('videoToastBody')
           }
         };
 
@@ -703,6 +717,8 @@
           window.URL.revokeObjectURL(url);
           document.body.removeChild(a);
         }, 100);
+
+        this.ui.toasts.video.show();
       }
 
       loop(timestamp) {
@@ -844,7 +860,7 @@
           document.body.removeChild(a);
           URL.revokeObjectURL(url);
 
-          this.ui.toasts.imageBody.textContent = "Image downloaded (Clipboard unavailable).";
+          this.ui.toasts.imageBody.textContent = "Image saved to the downloads folder.";
           this.ui.toasts.image.show();
 
         } catch (error) {
