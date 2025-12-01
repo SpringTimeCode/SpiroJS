@@ -153,6 +153,37 @@
             Plot Canvas
           </div>
           <div class="card-body" id="canvasDiv" style="padding: 0px; position: relative;">
+            <div id="fullscreenSliders"
+              class="d-none position-absolute top-50 start-0 translate-middle-y ms-3 p-3 rounded shadow"
+              style="background-color: rgba(255, 255, 255, 0.9); z-index: 1050; transition: opacity 0.5s ease-in-out; width: 300px;">
+              <div class="mb-2">
+                <label for="fsLineLengthRange" class="form-label small mb-0">Line Length: <span
+                    id="fsLineLengthRangeValue">0.150</span></label>
+                <input type="range" class="form-range" min="0.01" max="3" step="0.001" id="fsLineLengthRange"
+                  value="0.15">
+              </div>
+              <div class="mb-2">
+                <label for="fsSaturationRange" class="form-label small mb-0">Saturation Level: <span
+                    id="fsSaturationRangeValue">50</span></label>
+                <input type="range" class="form-range" min="1" max="360" step="1" id="fsSaturationRange" value="50">
+              </div>
+              <div class="mb-2">
+                <label for="fsPlotSizeRange" class="form-label small mb-0">Plot Size: <span
+                    id="fsPlotSizeRangeValue">90</span></label>
+                <input type="range" class="form-range" min="10" max="100" step="1" id="fsPlotSizeRange" value="90">
+              </div>
+              <div class="mb-2">
+                <label for="fsPlotSpeedRange" class="form-label small mb-0">Plot Speed: <span
+                    id="fsPlotSpeedRangeValue">15</span></label>
+                <input type="range" class="form-range" min="1" max="20" step="1" id="fsPlotSpeedRange" value="15">
+              </div>
+              <div class="mb-0">
+                <label for="fsMultiplierRange" class="form-label small mb-0">Loop Multiplier: <span
+                    id="fsMultiplierRangeValue">1.3000</span></label>
+                <input type="range" class="form-range" min="0" max="20" step="0.0001" id="fsMultiplierRange"
+                  value="1.3">
+              </div>
+            </div>
             <div id="fullscreenToolbar"
               class="d-none position-absolute bottom-0 start-50 translate-middle-x mb-3 p-2 rounded shadow"
               style="background-color: rgba(255, 255, 255, 0.9); z-index: 1050; transition: opacity 0.5s ease-in-out; width: auto; min-width: 600px;">
@@ -204,8 +235,7 @@
                         class="fa-classic fa-solid fa-video"></i></span></button>
                 </div>
                 <div class="col-auto">
-                  <span id="fsRecordingTimer" class="btn btn-outline-secondary btn-sm disabled"
-                    style="width: 60px;">5:00</span>
+                  <span id="fsRecordingTimer" class="btn btn-outline-secondary btn-sm" style="width: 60px;">5:00</span>
                 </div>
                 <div class="col-auto ms-3">
                   <button id="fsExitButton" class="btn btn-outline-secondary btn-sm" data-bs-toggle="tooltip"
@@ -216,47 +246,49 @@
               </div>
             </div>
             <canvas id="canvas" width="600" height="555"></canvas>
+
+            <div class="toast-container position-absolute bottom-0 end-0 p-3">
+              <div id="copyToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                  <strong class="me-auto">URL Copied!</strong>
+                  <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body" id="copyToastBody" style="white-space: pre;">
+                  URL with plot settings copied to the clipboard.
+                </div>
+              </div>
+            </div>
+
+            <div class="toast-container position-absolute bottom-0 end-0 p-3">
+              <div id="imageToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                  <strong class="me-auto">Image Saved!</strong>
+                  <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body" id="imageToastBody" style="white-space: pre;">
+                  Image saved to the downloads folder.
+                </div>
+              </div>
+            </div>
+
+            <div class="toast-container position-absolute bottom-0 end-0 p-3">
+              <div id="videoToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                  <strong class="me-auto">Video Saved!</strong>
+                  <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body" id="videoToastBody" style="white-space: pre;">
+                  Video saved to the downloads folder.
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="toast-container position-fixed bottom-0 end-0 p-3">
-    <div id="copyToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-      <div class="toast-header">
-        <strong class="me-auto">URL Copied!</strong>
-        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-      </div>
-      <div class="toast-body" id="copyToastBody" style="white-space: pre;">
-        URL with plot settings copied to the clipboard.
-      </div>
-    </div>
-  </div>
 
-  <div class="toast-container position-fixed bottom-0 end-0 p-3">
-    <div id="imageToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-      <div class="toast-header">
-        <strong class="me-auto">Image Saved!</strong>
-        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-      </div>
-      <div class="toast-body" id="imageToastBody" style="white-space: pre;">
-        Image saved to the downloads folder.
-      </div>
-    </div>
-  </div>
-
-  <div class="toast-container position-fixed bottom-0 end-0 p-3">
-    <div id="videoToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-      <div class="toast-header">
-        <strong class="me-auto">Video Saved!</strong>
-        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-      </div>
-      <div class="toast-body" id="videoToastBody" style="white-space: pre;">
-        Video saved to the downloads folder.
-      </div>
-    </div>
-  </div>
 
   <script>
     class SpiroGraph {
@@ -297,6 +329,14 @@
             dark: document.getElementById('themeToggleIconDark'),
             fsLight: document.getElementById('fsThemeToggleIconLight'),
             fsDark: document.getElementById('fsThemeToggleIconDark')
+          },
+          fsSliders: {
+            container: document.getElementById('fullscreenSliders'),
+            multiplier: { input: document.getElementById('fsMultiplierRange'), output: document.getElementById('fsMultiplierRangeValue') },
+            saturation: { input: document.getElementById('fsSaturationRange'), output: document.getElementById('fsSaturationRangeValue') },
+            lineLength: { input: document.getElementById('fsLineLengthRange'), output: document.getElementById('fsLineLengthRangeValue') },
+            plotSpeed: { input: document.getElementById('fsPlotSpeedRange'), output: document.getElementById('fsPlotSpeedRangeValue') },
+            plotSize: { input: document.getElementById('fsPlotSizeRange'), output: document.getElementById('fsPlotSizeRangeValue') }
           },
           canvasDiv: document.getElementById('canvasDiv'),
           canvas: document.getElementById("canvas"),
@@ -386,6 +426,7 @@
           this.ui.themeIcons.fsLight.style.display = 'block';
           this.ui.themeIcons.fsDark.style.display = 'none';
           this.ui.fullscreenToolbar.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+          this.ui.fsSliders.container.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
           this.state.strokeColor = "#000000";
         } else {
           this.ui.themeIcons.light.style.display = 'none';
@@ -393,6 +434,7 @@
           this.ui.themeIcons.fsLight.style.display = 'none';
           this.ui.themeIcons.fsDark.style.display = 'block';
           this.ui.fullscreenToolbar.style.backgroundColor = 'rgba(33, 37, 41, 0.9)'; // Dark bg
+          this.ui.fsSliders.container.style.backgroundColor = 'rgba(33, 37, 41, 0.9)'; // Dark bg
           this.state.strokeColor = "#FFFFFF";
         }
       }
@@ -406,6 +448,16 @@
         this.ui.plotSpeed.input.addEventListener('input', (e) => {
           this.state.plotSpeed = parseFloat(e.target.value);
           this.updateUI(); // Update label
+        });
+
+        // Fullscreen Range Inputs
+        this.ui.fsSliders.multiplier.input.addEventListener('input', (e) => this.handleInput('multiplier', e.target.value));
+        this.ui.fsSliders.saturation.input.addEventListener('input', (e) => this.handleInput('saturation', e.target.value));
+        this.ui.fsSliders.lineLength.input.addEventListener('input', (e) => this.handleInput('lineLength', e.target.value));
+        this.ui.fsSliders.plotSize.input.addEventListener('input', (e) => this.handleInput('plotSize', e.target.value));
+        this.ui.fsSliders.plotSpeed.input.addEventListener('input', (e) => {
+          this.state.plotSpeed = parseFloat(e.target.value);
+          this.updateUI();
         });
 
         // Buttons
@@ -467,6 +519,22 @@
         this.ui.plotSpeed.input.value = this.state.plotSpeed;
         this.ui.plotSpeed.output.textContent = 'Plot Speed: ' + this.state.plotSpeed;
 
+        // Update Fullscreen Sliders
+        this.ui.fsSliders.multiplier.input.value = this.state.multiplier;
+        this.ui.fsSliders.multiplier.output.textContent = this.state.multiplier.toFixed(4);
+
+        this.ui.fsSliders.saturation.input.value = this.state.saturation;
+        this.ui.fsSliders.saturation.output.textContent = this.state.saturation;
+
+        this.ui.fsSliders.lineLength.input.value = this.state.lineLength.toFixed(3);
+        this.ui.fsSliders.lineLength.output.textContent = this.state.lineLength.toFixed(3);
+
+        this.ui.fsSliders.plotSize.input.value = this.state.plotSize;
+        this.ui.fsSliders.plotSize.output.textContent = this.state.plotSize.toFixed(0);
+
+        this.ui.fsSliders.plotSpeed.input.value = this.state.plotSpeed;
+        this.ui.fsSliders.plotSpeed.output.textContent = this.state.plotSpeed;
+
         // Update Button States
         this.ui.buttons.forward.classList.toggle('active', this.state.isLoopRunning && this.state.loopDirection === 'Forward');
         this.ui.buttons.backward.classList.toggle('active', this.state.isLoopRunning && this.state.loopDirection === 'Backward');
@@ -511,6 +579,7 @@
       handleFullScreenChange() {
         if (this.getFullscreenElement()) {
           this.ui.fullscreenToolbar.classList.remove('d-none');
+          this.ui.fsSliders.container.classList.remove('d-none');
           this.ui.canvasDiv.classList.add('bg-body'); // Ensure background is set
 
           // Start tracking mouse movement
@@ -518,6 +587,7 @@
           this.handleMouseMove(); // Trigger once to show button initially
         } else {
           this.ui.fullscreenToolbar.classList.add('d-none');
+          this.ui.fsSliders.container.classList.add('d-none');
           this.ui.canvasDiv.classList.remove('bg-body');
 
           // Stop tracking
@@ -527,6 +597,7 @@
             this.mouseMoveTimeout = null;
           }
           this.ui.fullscreenToolbar.style.opacity = '1'; // Reset for next time
+          this.ui.fsSliders.container.style.opacity = '1';
         }
         this.resizeCanvas();
         this.draw();
@@ -534,6 +605,7 @@
 
       handleMouseMove() {
         this.ui.fullscreenToolbar.style.opacity = '1';
+        this.ui.fsSliders.container.style.opacity = '1';
 
         if (this.mouseMoveTimeout) {
           clearTimeout(this.mouseMoveTimeout);
@@ -542,6 +614,7 @@
         this.mouseMoveTimeout = setTimeout(() => {
           if (this.getFullscreenElement()) {
             this.ui.fullscreenToolbar.style.opacity = '0';
+            this.ui.fsSliders.container.style.opacity = '0';
           }
         }, 3000);
       }
@@ -603,7 +676,6 @@
         this.ui.buttons.fsRecord.disabled = true;
         if (this.state.isRecording) {
           this.stopRecording();
-          alert("Recording stopped because animation stopped.");
         }
       }
 
