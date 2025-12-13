@@ -379,7 +379,8 @@
           isLoopRunning: false,
           loopDirection: 'Forward',
           strokeColor: '#000000',
-          isRecording: false
+          isRecording: false,
+          fadeAccumulator: 0
         };
 
         this.animationId = null;
@@ -898,14 +899,32 @@
 
         // Fill background with semi-transparent overlay to create fading effect
         if (this.state.isLoopRunning) {
-          // Semi-transparent overlay for fading trail effect
-          const fadeAlpha = this.state.fadeEffect;
-          ctx.fillStyle = this.state.theme === 'light' ? `rgba(255, 255, 255, ${fadeAlpha})` : `rgba(33, 37, 41, ${fadeAlpha})`;
+          let fadeAlpha = this.state.fadeEffect;
+          let shouldFade = true;
+
+          // Accumulated Fade Logic for low alpha values to prevent "stuck pixels"
+          if (fadeAlpha < 0.05) {
+            this.state.fadeAccumulator += fadeAlpha;
+            if (this.state.fadeAccumulator >= 0.05) {
+              fadeAlpha = 0.05; // Use a strong enough alpha to overcome rounding
+              this.state.fadeAccumulator -= 0.05;
+            } else {
+              shouldFade = false; // Skip fading this frame
+            }
+          } else {
+            this.state.fadeAccumulator = 0; // Reset if user increases slider
+          }
+
+          if (shouldFade) {
+            // Semi-transparent overlay for fading trail effect
+            ctx.fillStyle = this.state.theme === 'light' ? `rgba(255, 255, 255, ${fadeAlpha})` : `rgba(33, 37, 41, ${fadeAlpha})`;
+            ctx.fillRect(0, 0, width, height);
+          }
         } else {
           // Solid fill when not animating to show clean static image
           ctx.fillStyle = this.state.theme === 'light' ? '#ffffff' : '#212529';
+          ctx.fillRect(0, 0, width, height);
         }
-        ctx.fillRect(0, 0, width, height);
 
         ctx.strokeStyle = this.state.strokeColor;
         ctx.beginPath(); // Batch all lines into one path for performance
