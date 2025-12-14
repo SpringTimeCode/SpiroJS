@@ -608,7 +608,8 @@
         if (this.getFullscreenElement()) {
           this.ui.fullscreenToolbar.classList.remove('d-none');
           this.ui.fsSliders.container.classList.remove('d-none');
-          this.ui.canvasDiv.classList.add('bg-body'); // Ensure background is set
+          // Set explicit background color to match canvas background exactly
+          this.ui.canvasDiv.style.backgroundColor = this.state.theme === 'light' ? '#ffffff' : '#212529';
 
           // Start tracking mouse movement
           document.addEventListener('mousemove', this.handleMouseMoveBound);
@@ -616,7 +617,8 @@
         } else {
           this.ui.fullscreenToolbar.classList.add('d-none');
           this.ui.fsSliders.container.classList.add('d-none');
-          this.ui.canvasDiv.classList.remove('bg-body');
+          // Remove explicit background color when exiting fullscreen
+          this.ui.canvasDiv.style.backgroundColor = '';
 
           // Stop tracking
           document.removeEventListener('mousemove', this.handleMouseMoveBound);
@@ -628,6 +630,11 @@
           this.ui.fsSliders.container.style.opacity = '1';
         }
         this.resizeCanvas();
+        // Force a solid background fill after resize to prevent color drift
+        const ctx = this.ui.canvas.getContext('2d');
+        ctx.fillStyle = this.state.theme === 'light' ? '#ffffff' : '#212529';
+        ctx.fillRect(0, 0, this.ui.canvas.width, this.ui.canvas.height);
+        this.state.fadeAccumulator = 0; // Reset fade accumulator
         this.draw();
       }
 
@@ -672,6 +679,10 @@
       toggleTheme() {
         this.state.theme = this.state.theme === 'light' ? 'dark' : 'light';
         this.applyTheme();
+        // Update fullscreen background if currently in fullscreen
+        if (this.getFullscreenElement()) {
+          this.ui.canvasDiv.style.backgroundColor = this.state.theme === 'light' ? '#ffffff' : '#212529';
+        }
         this.draw();
       }
 
