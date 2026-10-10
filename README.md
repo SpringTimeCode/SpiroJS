@@ -22,6 +22,7 @@ When served over `http(s)`, SpiroJS can also be installed as an app and works of
 - **Export:** copy the image to the clipboard, download it as a PNG, or record up to 5 minutes of video.
 - **Shareable links:** copy a URL that reopens the plot with the same settings.
 - **Light and dark themes:** follows your system setting by default.
+- **Built-in help:** the ? button in the top bar shows or hides tooltips, help text under each field and the shortcuts list.
 - **Remembers your settings** between visits.
 
 ## Controls
@@ -46,6 +47,7 @@ When served over `http(s)`, SpiroJS can also be installed as an app and works of
 | <kbd>C</kbd> | Next color mode |
 | <kbd>G</kbd> | Toggle glow |
 | <kbd>R</kbd> | Random settings |
+| <kbd>H</kbd> | Toggle help (tooltips, field help and shortcuts) |
 | <kbd>←</kbd> / <kbd>→</kbd> | Nudge the loop multiplier (hold <kbd>Shift</kbd> for bigger steps) |
 
 ## URL parameters

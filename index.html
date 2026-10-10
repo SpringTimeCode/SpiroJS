@@ -42,6 +42,39 @@
         animation: none;
       }
     }
+
+    /* Compact Plot Settings panel: smaller text and slimmer range inputs */
+    #settingsContent {
+      font-size: 0.875rem;
+    }
+
+    #settingsContent .form-range {
+      height: 1rem;
+    }
+
+    #settingsContent .form-range::-webkit-slider-runnable-track {
+      height: 0.25rem;
+    }
+
+    #settingsContent .form-range::-webkit-slider-thumb {
+      width: 0.75rem;
+      height: 0.75rem;
+      margin-top: -0.25rem; /* Center the thumb on the track */
+    }
+
+    #settingsContent .form-range::-moz-range-track {
+      height: 0.25rem;
+    }
+
+    #settingsContent .form-range::-moz-range-thumb {
+      width: 0.75rem;
+      height: 0.75rem;
+    }
+
+    /* Help toggle in the navbar hides form-text help and the shortcuts list */
+    .hide-help .help-text {
+      display: none !important;
+    }
   </style>
 </head>
 
@@ -59,6 +92,10 @@
               <a href="https://github.com/SpringTimeCode/SpiroJS" class="btn btn-outline-secondary btn-sm" target="_blank"
                 rel="noopener" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="View on GitHub"
                 data-bs-delay='{"show":1000,"hide":100}'><span><i class="fa-brands fa-github"></i></span></a>
+              <button data-action="help" class="btn btn-outline-secondary btn-sm" aria-label="Toggle Help"
+                data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Toggle Help (H)"
+                data-bs-delay='{"show":1000,"hide":100}'><span><i
+                    class="fa-classic fa-solid fa-circle-question"></i></span></button>
               <button data-action="theme" class="btn btn-outline-secondary btn-sm" data-bs-toggle="tooltip"
                 data-bs-placement="bottom" data-bs-title="Toggle Theme"
                 data-bs-delay='{"show":1000,"hide":100}'><span class="theme-icon-light"><i
@@ -77,15 +114,20 @@
           </div>
           <div class="card-body">
             <div id="settingsContent">
-              <div class="d-flex gap-2 mb-3">
-                <!-- Options are generated from PRESETS in the script below -->
-                <select id="presetSelect" class="form-select form-select-sm" aria-label="Load a preset">
-                  <option value="" selected>Load a preset&hellip;</option>
-                </select>
-                <button data-action="randomize" class="btn btn-outline-primary btn-sm text-nowrap"
-                  data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Random Settings (R)"
-                  data-bs-delay='{"show":1000,"hide":100}'><span><i class="fa-classic fa-solid fa-shuffle"></i>
-                    Random</span></button>
+              <div class="mb-3">
+                <div class="d-flex gap-2">
+                  <!-- Options are generated from PRESETS in the script below -->
+                  <select id="presetSelect" class="form-select form-select-sm" aria-label="Load a preset"
+                    aria-describedby="presetHelp">
+                    <option value="" selected>Load a preset&hellip;</option>
+                  </select>
+                  <button data-action="randomize" class="btn btn-outline-primary btn-sm text-nowrap"
+                    data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Random Settings (R)"
+                    data-bs-delay='{"show":1000,"hide":100}'><span><i class="fa-classic fa-solid fa-shuffle"></i>
+                      Random</span></button>
+                </div>
+                <div id="presetHelp" class="form-text help-text">Presets set the shape and colors; size, speed, fade
+                  and line width are kept. Random picks new settings.</div>
               </div>
               <!-- Sliders are generated from SLIDERS in the script below -->
               <div id="mainSliders"></div>
@@ -128,9 +170,9 @@
                   data-bs-delay='{"show":1000,"hide":100}'><span><i
                       class="fa-classic fa-solid fa-expand"></i></span></button>
               </div>
-              <div class="text-center small text-body-secondary mt-3">
+              <div class="help-text text-center small text-body-secondary mt-3">
                 Shortcuts: <kbd>Space</kbd> play/stop &middot; <kbd>F</kbd> fullscreen &middot;
-                <kbd>C</kbd> color mode &middot; <kbd>G</kbd> glow &middot; <kbd>R</kbd> random &middot;
+                <kbd>C</kbd> color mode &middot; <kbd>G</kbd> glow &middot; <kbd>R</kbd> random &middot; <kbd>H</kbd> help &middot;
                 <kbd>&larr;</kbd>/<kbd>&rarr;</kbd> nudge multiplier (hold <kbd>Shift</kbd> for bigger steps)
               </div>
             </div>
@@ -138,7 +180,7 @@
         </div>
       </div>
       <div class="col-lg-8 p-1">
-        <div class="card h-100">
+        <div class="card h-100 overflow-hidden"><!-- Clip the canvas to the rounded corners -->
           <div class="card-header">
             Plot Canvas
           </div>
@@ -224,13 +266,20 @@
   <script>
     // Slider definitions shared by the main panel, the fullscreen panel, URL params and saved settings
     const SLIDERS = [
-      { key: 'lineLength', param: 'LineLength', label: 'Line Length', min: 0.01, max: 3, step: 0.001, value: 0.15, digits: 3 },
-      { key: 'lineWidth', param: 'LineWidth', label: 'Line Width', min: 0.5, max: 4, step: 0.1, value: 1, digits: 1 },
-      { key: 'saturation', param: 'Saturation', label: 'Plot Range', min: 1, max: 360, step: 1, value: 50, digits: 0 },
-      { key: 'plotSize', param: 'PlotSize', label: 'Plot Size', min: 10, max: 100, step: 1, value: 90, digits: 0 },
-      { key: 'plotSpeed', param: 'PlotSpeed', label: 'Plot Speed', min: 1, max: 20, step: 1, value: 15, digits: 0 },
-      { key: 'multiplier', param: 'Multiplier', label: 'Loop Multiplier', min: 0, max: 20, step: 0.0001, value: 1.3, digits: 4 },
-      { key: 'fadeEffect', param: 'FadeEffect', label: 'Fade Effect', min: 0.001, max: 0.5, step: 0.001, value: 0.05, digits: 3 }
+      { key: 'lineLength', param: 'LineLength', label: 'Line Length', min: 0.01, max: 3, step: 0.001, value: 0.15, digits: 3,
+        help: 'Step between points along the curve. Smaller values draw smoother, denser lines.' },
+      { key: 'lineWidth', param: 'LineWidth', label: 'Line Width', min: 0.5, max: 4, step: 0.1, value: 1, digits: 1,
+        help: 'Thickness of the drawn lines, in pixels.' },
+      { key: 'saturation', param: 'Saturation', label: 'Plot Range', min: 1, max: 360, step: 1, value: 50, digits: 0,
+        help: 'How much of the curve is drawn. Higher values add more loops and detail.' },
+      { key: 'plotSize', param: 'PlotSize', label: 'Plot Size', min: 10, max: 100, step: 1, value: 90, digits: 0,
+        help: 'Size of the plot as a percentage of the canvas.' },
+      { key: 'plotSpeed', param: 'PlotSpeed', label: 'Plot Speed', min: 1, max: 20, step: 1, value: 15, digits: 0,
+        help: 'How fast the Loop Multiplier changes while animating. Every 3 steps doubles the speed.' },
+      { key: 'multiplier', param: 'Multiplier', label: 'Loop Multiplier', min: 0, max: 20, step: 0.0001, value: 1.3, digits: 4,
+        help: 'Sets the shape of the pattern; animating sweeps through it. Use ←/→ to nudge it.' },
+      { key: 'fadeEffect', param: 'FadeEffect', label: 'Fade Effect', min: 0.001, max: 0.5, step: 0.001, value: 0.05, digits: 3,
+        help: 'How quickly old lines fade while animating. Lower values leave longer trails.' }
     ];
 
     const THEMES = {
@@ -262,6 +311,7 @@
     ];
 
     const STORAGE_KEY = 'spirojs-settings';
+    const HELP_STORAGE_KEY = 'spirojs-help'; // UI preference, kept out of the shareable settings
     const MULTIPLIER_MAX = 20;
     // Multiplier units per second at Plot Speed 15; each 3 steps of Plot Speed doubles or halves the rate
     const BASE_SPEED = 0.006;
@@ -278,6 +328,8 @@
           sliders: {}, // key -> { inputs, outputs }, filled in by buildSliders()
           colorModeSelects: [], // Filled in by buildStyleControls()
           glowSwitches: [], // Filled in by buildStyleControls()
+          helpButtons: document.querySelectorAll('[data-action="help"]'),
+          tooltips: [], // Filled in by init()
           actionButtons: document.querySelectorAll('[data-action]'),
           recordButtons: document.querySelectorAll('[data-action="record"]'),
           timers: document.querySelectorAll('.recording-timer'),
@@ -295,6 +347,7 @@
           theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
           colorMode: 'mono',
           glow: false,
+          help: true, // Read from storage in loadSettings()
           isLoopRunning: false,
           loopDirection: 'Forward',
           isRecording: false,
@@ -336,7 +389,37 @@
         this.draw();
 
         // Initialize Tooltips
-        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+        this.ui.tooltips = [...document.querySelectorAll('[data-bs-toggle="tooltip"]')]
+          .map(el => ({ el, tooltip: new bootstrap.Tooltip(el) }));
+        this.applyHelp();
+      }
+
+      // Help on: tooltips, form-text help and the shortcuts list. The help button keeps its tooltip so it stays discoverable.
+      applyHelp() {
+        const { help } = this.state;
+        document.documentElement.classList.toggle('hide-help', !help);
+        for (const { el, tooltip } of this.ui.tooltips) {
+          if (help || el.dataset.action === 'help') {
+            tooltip.enable();
+          } else {
+            tooltip.hide();
+            tooltip.disable();
+          }
+        }
+        this.ui.helpButtons.forEach(button => {
+          button.classList.toggle('active', help);
+          button.setAttribute('aria-pressed', help);
+        });
+      }
+
+      toggleHelp() {
+        this.state.help = !this.state.help;
+        this.applyHelp();
+        try {
+          localStorage.setItem(HELP_STORAGE_KEY, this.state.help);
+        } catch (err) {
+          console.warn('Could not save help setting:', err);
+        }
       }
 
       // Main panel and fullscreen panel use the same markup; the fullscreen one is compact
@@ -353,12 +436,15 @@
             const id = `${prefix}${slider.key}Range`;
             const row = document.createElement('div');
             row.className = compact ? 'mb-2' : 'mb-3';
+            // Help text only in the main panel; the fullscreen panel stays compact
+            const help = compact ? '' : `<div id="${id}Help" class="form-text help-text mt-0">${slider.help}</div>`;
             row.innerHTML = `
               <div class="d-flex justify-content-between align-items-baseline${compact ? ' small' : ''}">
                 <label for="${id}" class="form-label mb-0">${slider.label}</label>
                 <span class="slider-value" aria-hidden="true"></span>
               </div>
-              <input type="range" class="form-range" id="${id}" min="${slider.min}" max="${slider.max}" step="${slider.step}">`;
+              <input type="range" class="form-range" id="${id}" min="${slider.min}" max="${slider.max}" step="${slider.step}"${compact ? '' : ` aria-describedby="${id}Help"`}>
+              ${help}`;
             container.appendChild(row);
 
             this.ui.sliders[slider.key].inputs.push(row.querySelector('input'));
@@ -375,17 +461,22 @@
         for (const container of [this.ui.mainSliders, this.ui.fsSliders]) {
           const compact = container === this.ui.fsSliders;
           const prefix = compact ? 'fs-' : '';
+          const describedBy = compact ? '' : ' aria-describedby="styleHelp"';
           const row = document.createElement('div');
-          row.className = `d-flex align-items-end gap-3 ${compact ? 'mb-2 small' : 'mb-3'}`;
+          row.className = compact ? 'mb-2 small' : 'mb-3';
           row.innerHTML = `
-            <div class="flex-grow-1">
-              <label for="${prefix}colorModeSelect" class="form-label mb-1">Color Mode</label>
-              <select class="form-select form-select-sm" id="${prefix}colorModeSelect">${options}</select>
+            <div class="d-flex align-items-end gap-3">
+              <div class="flex-grow-1">
+                <label for="${prefix}colorModeSelect" class="form-label mb-1">Color Mode</label>
+                <select class="form-select form-select-sm" id="${prefix}colorModeSelect"${describedBy}>${options}</select>
+              </div>
+              <div class="form-check form-switch mb-1">
+                <input class="form-check-input" type="checkbox" role="switch" id="${prefix}glowSwitch"${describedBy}>
+                <label class="form-check-label" for="${prefix}glowSwitch">Glow</label>
+              </div>
             </div>
-            <div class="form-check form-switch mb-1">
-              <input class="form-check-input" type="checkbox" role="switch" id="${prefix}glowSwitch">
-              <label class="form-check-label" for="${prefix}glowSwitch">Glow</label>
-            </div>`;
+            ${compact ? '' : `<div id="styleHelp" class="form-text help-text">Gradient applied along the curve
+              (<kbd>C</kbd> cycles modes). Glow adds a soft halo around the lines (<kbd>G</kbd>).</div>`}`;
           container.appendChild(row);
           this.ui.colorModeSelects.push(row.querySelector('select'));
           this.ui.glowSwitches.push(row.querySelector('input'));
@@ -442,6 +533,7 @@
       // Priority: URL params, then saved settings, then defaults
       loadSettings() {
         try {
+          this.state.help = localStorage.getItem(HELP_STORAGE_KEY) !== 'false';
           this.applySettings(JSON.parse(localStorage.getItem(STORAGE_KEY)) || {});
         } catch (err) {
           console.warn('Could not read saved settings:', err);
@@ -514,6 +606,7 @@
           backward: () => this.toggleLoop('Backward'),
           stop: () => this.stopLoop(),
           theme: () => this.toggleTheme(),
+          help: () => this.toggleHelp(),
           copyUrl: () => this.copyToClipboard(),
           copyImage: () => this.copyImage(),
           downloadImage: () => this.downloadImage(),
@@ -562,7 +655,7 @@
         });
         window.addEventListener('pagehide', () => this.saveSettings());
 
-        // The inline canvas matches the settings card height, which can change after fonts and icons load
+        // The canvas fits the space below the navbar and settings, which can shift after fonts and icons load
         new ResizeObserver(() => {
           if (!this.getFullscreenElement()) {
             this.resizeCanvas();
@@ -608,6 +701,10 @@
           case 'r':
           case 'R':
             this.randomize();
+            break;
+          case 'h':
+          case 'H':
+            this.toggleHelp();
             break;
           case 'ArrowLeft':
           case 'ArrowRight': {
@@ -696,19 +793,24 @@
         this.clearCanvas();
       }
 
+      // Fit the canvas to the visible page so it never needs scrolling to see
       getInlineCanvasHeight(width) {
-        let height = width * 0.945;
+        const settingsBody = this.ui.settingsContent.parentElement;
+        let height;
 
-        // Side-by-side layout (Bootstrap lg breakpoint): fit the viewport, but never be shorter than the settings card
         if (window.matchMedia('(min-width: 992px)').matches) {
+          // Side-by-side layout (Bootstrap lg breakpoint): fill the space below the navbar.
+          // The settings card is capped to the same height and scrolls if its content is taller.
           const top = this.ui.canvasDiv.getBoundingClientRect().top + window.scrollY;
-          const available = window.innerHeight - top - 12; // Leave room for the card border and page padding
-          height = Math.min(height, Math.max(available, 360));
-
-          const settingsBody = getComputedStyle(this.ui.settingsContent.parentElement);
-          const settingsHeight = this.ui.settingsContent.offsetHeight +
-            parseFloat(settingsBody.paddingTop) + parseFloat(settingsBody.paddingBottom);
-          height = Math.max(height, settingsHeight);
+          height = Math.max(window.innerHeight - top - 12, 360); // Leave room for the card border and page padding
+          settingsBody.style.maxHeight = `${Math.round(height)}px`;
+          settingsBody.style.overflowY = 'auto';
+        } else {
+          // Stacked layout: settings sit above, so keep the canvas no taller than the screen minus its card header
+          const header = this.ui.canvasDiv.previousElementSibling.offsetHeight;
+          height = Math.min(width * 0.945, Math.max(window.innerHeight - header - 12, 240));
+          settingsBody.style.maxHeight = '';
+          settingsBody.style.overflowY = '';
         }
         return Math.round(height);
       }
