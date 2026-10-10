@@ -16,6 +16,8 @@ When served over `http(s)`, SpiroJS can also be installed as an app and works of
 
 - **Animated plots:** play forward or backward and watch the pattern evolve as the loop multiplier changes.
 - **Presets and random settings:** start from a curated preset or shuffle the settings to discover new patterns.
+- **Undo, redo and reset:** step back through changes, or return everything to the defaults.
+- **Precise control:** type an exact value into any setting, or fine-tune the loop multiplier by scrolling or dragging sideways on the canvas.
 - **Color modes:** Mono, Rainbow, Sunset, and Ocean gradients along the curve, with an optional glow.
 - **Fading trails:** adjustable trail length for a motion-blur effect while animating.
 - **Fullscreen mode:** controls fade out when the mouse is still and reappear when it moves.
@@ -38,6 +40,8 @@ When served over `http(s)`, SpiroJS can also be installed as an app and works of
 | Fade Effect | How quickly old lines fade while animating. Lower values leave longer trails. |
 | Color Mode / Glow | Line coloring and the optional glow effect. |
 
+Click the number next to a slider to type an exact value. Over the canvas, scroll or drag left and right to fine-tune the loop multiplier (hold <kbd>Shift</kbd> for bigger steps).
+
 ### Keyboard shortcuts
 
 | Key | Action |
@@ -49,6 +53,8 @@ When served over `http(s)`, SpiroJS can also be installed as an app and works of
 | <kbd>R</kbd> | Random settings |
 | <kbd>H</kbd> | Toggle help (tooltips, field help and shortcuts) |
 | <kbd>←</kbd> / <kbd>→</kbd> | Nudge the loop multiplier (hold <kbd>Shift</kbd> for bigger steps) |
+| <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>Z</kbd> | Undo |
+| <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd> or <kbd>Ctrl</kbd>+<kbd>Y</kbd> | Redo |
 
 ## URL parameters
 

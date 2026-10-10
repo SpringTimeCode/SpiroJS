@@ -27,7 +27,14 @@
       font-variant-numeric: tabular-nums;
     }
 
+    /* Shown under the record button (centered by startTimer()) so it doesn't shift the toolbar */
     .recording-timer {
+      position: absolute;
+      top: 100%;
+      margin-top: 2px;
+      transform: translateX(50%);
+      font-size: 0.65rem;
+      padding: 0.2em 0.4em;
       animation: recording-pulse 1.5s ease-in-out infinite;
     }
 
@@ -43,32 +50,67 @@
       }
     }
 
-    /* Compact Plot Settings panel: smaller text and slimmer range inputs */
-    #settingsContent {
+    /* Compact settings panels (main and fullscreen): smaller text and slimmer range inputs */
+    #settingsContent,
+    #fullscreenSliders {
       font-size: 0.875rem;
     }
 
-    #settingsContent .form-range {
+    :is(#settingsContent, #fullscreenSliders) .form-range {
       height: 1rem;
     }
 
-    #settingsContent .form-range::-webkit-slider-runnable-track {
+    :is(#settingsContent, #fullscreenSliders) .form-range::-webkit-slider-runnable-track {
       height: 0.25rem;
     }
 
-    #settingsContent .form-range::-webkit-slider-thumb {
+    :is(#settingsContent, #fullscreenSliders) .form-range::-webkit-slider-thumb {
       width: 0.75rem;
       height: 0.75rem;
       margin-top: -0.25rem; /* Center the thumb on the track */
     }
 
-    #settingsContent .form-range::-moz-range-track {
+    :is(#settingsContent, #fullscreenSliders) .form-range::-moz-range-track {
       height: 0.25rem;
     }
 
-    #settingsContent .form-range::-moz-range-thumb {
+    :is(#settingsContent, #fullscreenSliders) .form-range::-moz-range-thumb {
       width: 0.75rem;
       height: 0.75rem;
+    }
+
+    /* Equal-width toolbar buttons, so icons of different widths (and the record/stop swap) don't change their size */
+    :is(#settingsContent, #fullscreenToolbar) :is(.btn-group-sm > .btn, .btn-sm) {
+      min-width: 2.25rem;
+    }
+
+    /* Slider values are editable but look like plain text until hovered or focused */
+    input.slider-value {
+      width: 5.5em;
+      padding: 0 0.25rem;
+      margin-right: -0.25rem;
+      text-align: right;
+      font: inherit;
+      color: inherit;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: var(--bs-border-radius-sm);
+    }
+
+    input.slider-value:hover {
+      border-color: var(--bs-border-color);
+    }
+
+    input.slider-value:focus {
+      outline: 0;
+      border-color: var(--bs-primary);
+      background: var(--bs-body-bg);
+    }
+
+    /* Drag sideways on the canvas to adjust the multiplier; vertical touch drags still scroll the page */
+    #canvas {
+      cursor: ew-resize;
+      touch-action: pan-y;
     }
 
     /* Help toggle in the navbar hides form-text help and the shortcuts list */
@@ -121,13 +163,28 @@
                     aria-describedby="presetHelp">
                     <option value="" selected>Load a preset&hellip;</option>
                   </select>
-                  <button data-action="randomize" class="btn btn-outline-primary btn-sm text-nowrap"
-                    data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Random Settings (R)"
-                    data-bs-delay='{"show":1000,"hide":100}'><span><i class="fa-classic fa-solid fa-shuffle"></i>
-                      Random</span></button>
+                  <div class="btn-group btn-group-sm flex-shrink-0" role="group" aria-label="History">
+                    <button data-action="undo" class="btn btn-outline-primary" data-bs-toggle="tooltip"
+                      data-bs-placement="top" data-bs-title="Undo (Ctrl/⌘+Z)"
+                      data-bs-delay='{"show":1000,"hide":100}'><span><i
+                          class="fa-classic fa-solid fa-arrow-rotate-left"></i></span></button>
+                    <button data-action="redo" class="btn btn-outline-primary" data-bs-toggle="tooltip"
+                      data-bs-placement="top" data-bs-title="Redo (Ctrl/⌘+Shift+Z)"
+                      data-bs-delay='{"show":1000,"hide":100}'><span><i
+                          class="fa-classic fa-solid fa-arrow-rotate-right"></i></span></button>
+                    <button data-action="reset" class="btn btn-outline-primary" data-bs-toggle="tooltip"
+                      data-bs-placement="top" data-bs-title="Reset to Defaults"
+                      data-bs-delay='{"show":1000,"hide":100}'><span><i
+                          class="fa-classic fa-solid fa-eraser"></i></span></button>
+                  </div>
+                  <button data-action="randomize" class="btn btn-outline-primary btn-sm text-nowrap flex-shrink-0"
+                    aria-label="Random Settings" data-bs-toggle="tooltip" data-bs-placement="top"
+                    data-bs-title="Random Settings (R)" data-bs-delay='{"show":1000,"hide":100}'><span><i
+                        class="fa-classic fa-solid fa-shuffle"></i><span class="d-none d-xl-inline">
+                        Random</span></span></button>
                 </div>
                 <div id="presetHelp" class="form-text help-text">Presets set the shape and colors; size, speed, fade
-                  and line width are kept. Random picks new settings.</div>
+                  and line width are kept. Next to them: undo, redo, reset to defaults and random settings.</div>
               </div>
               <!-- Sliders are generated from SLIDERS in the script below -->
               <div id="mainSliders"></div>
@@ -138,42 +195,46 @@
                     data-bs-delay='{"show":1000,"hide":100}'><span><i
                         class="fa-classic fa-solid fa-caret-left fa-lg"></i></span></button>
                   <button data-action="stop" class="btn btn-outline-primary" data-bs-toggle="tooltip"
-                    data-bs-placement="top" data-bs-title="Stop Animation"
+                    data-bs-placement="top" data-bs-title="Stop Animation (Space)"
                     data-bs-delay='{"show":1000,"hide":100}'><span><i class="fa-classic fa-solid fa-stop"></i></span>
                   </button>
                   <button data-action="forward" class="btn btn-outline-primary" data-bs-toggle="tooltip"
-                    data-bs-placement="top" data-bs-title="Play Forward"
+                    data-bs-placement="top" data-bs-title="Play Forward (Space)"
                     data-bs-delay='{"show":1000,"hide":100}'><span><i
                         class="fa-classic fa-solid fa-caret-right fa-lg"></i></span></button>
                 </div>
-                <div class="btn-group btn-group-sm" role="group" aria-label="Share and export">
-                  <button data-action="copyUrl" class="btn btn-outline-primary" data-bs-toggle="tooltip"
-                    data-bs-placement="top" data-bs-title="Copy Settings URL"
-                    data-bs-delay='{"show":1000,"hide":100}'><span><i
-                        class="fa-classic fa-solid fa-link"></i></span></button>
-                  <button data-action="copyImage" class="btn btn-outline-primary" data-bs-toggle="tooltip"
-                    data-bs-placement="top" data-bs-title="Copy Image"
-                    data-bs-delay='{"show":1000,"hide":100}'><span><i
-                        class="fa-classic fa-solid fa-copy"></i></span></button>
-                  <button data-action="downloadImage" class="btn btn-outline-primary" data-bs-toggle="tooltip"
-                    data-bs-placement="top" data-bs-title="Download Image"
-                    data-bs-delay='{"show":1000,"hide":100}'><span><i
-                        class="fa-classic fa-solid fa-camera"></i></span></button>
-                  <button data-action="record" class="btn btn-outline-primary" data-bs-toggle="tooltip"
-                    data-bs-placement="top" data-bs-title="Record Video"
-                    data-bs-delay='{"show":1000,"hide":100}'><span><i
-                        class="fa-classic fa-solid fa-video"></i></span></button>
+                <div class="position-relative">
+                  <div class="btn-group btn-group-sm" role="group" aria-label="Share and export">
+                    <button data-action="copyUrl" class="btn btn-outline-primary" data-bs-toggle="tooltip"
+                      data-bs-placement="top" data-bs-title="Copy Settings URL"
+                      data-bs-delay='{"show":1000,"hide":100}'><span><i
+                          class="fa-classic fa-solid fa-link"></i></span></button>
+                    <button data-action="copyImage" class="btn btn-outline-primary" data-bs-toggle="tooltip"
+                      data-bs-placement="top" data-bs-title="Copy Image"
+                      data-bs-delay='{"show":1000,"hide":100}'><span><i
+                          class="fa-classic fa-solid fa-copy"></i></span></button>
+                    <button data-action="downloadImage" class="btn btn-outline-primary" data-bs-toggle="tooltip"
+                      data-bs-placement="top" data-bs-title="Download Image"
+                      data-bs-delay='{"show":1000,"hide":100}'><span><i
+                          class="fa-classic fa-solid fa-camera"></i></span></button>
+                    <button data-action="record" class="btn btn-outline-primary" data-bs-toggle="tooltip"
+                      data-bs-placement="top" data-bs-title="Record Video"
+                      data-bs-delay='{"show":1000,"hide":100}'><span><i
+                          class="fa-classic fa-solid fa-video"></i></span></button>
+                  </div>
+                  <span class="recording-timer badge text-bg-danger d-none">5:00</span>
                 </div>
-                <span class="recording-timer badge text-bg-danger d-none">5:00</span>
                 <button data-action="fullscreen" class="btn btn-outline-primary btn-sm" data-bs-toggle="tooltip"
-                  data-bs-placement="top" data-bs-title="Enter Fullscreen"
+                  data-bs-placement="top" data-bs-title="Enter Fullscreen (F)"
                   data-bs-delay='{"show":1000,"hide":100}'><span><i
                       class="fa-classic fa-solid fa-expand"></i></span></button>
               </div>
               <div class="help-text text-center small text-body-secondary mt-3">
                 Shortcuts: <kbd>Space</kbd> play/stop &middot; <kbd>F</kbd> fullscreen &middot;
                 <kbd>C</kbd> color mode &middot; <kbd>G</kbd> glow &middot; <kbd>R</kbd> random &middot; <kbd>H</kbd> help &middot;
-                <kbd>&larr;</kbd>/<kbd>&rarr;</kbd> nudge multiplier (hold <kbd>Shift</kbd> for bigger steps)
+                <kbd>&larr;</kbd>/<kbd>&rarr;</kbd> nudge multiplier (hold <kbd>Shift</kbd> for bigger steps) &middot;
+                <kbd>Ctrl</kbd>/<kbd>&#8984;</kbd>+<kbd>Z</kbd> undo &middot; add <kbd>Shift</kbd> to redo.
+                Click a value to type an exact number.
               </div>
             </div>
           </div>
@@ -200,33 +261,35 @@
                     data-bs-delay='{"show":1000,"hide":100}'><span><i
                         class="fa-classic fa-solid fa-caret-left fa-lg"></i></span></button>
                   <button data-action="stop" class="btn btn-outline-primary" data-bs-toggle="tooltip"
-                    data-bs-placement="top" data-bs-title="Stop Animation" data-bs-container="#fullscreenToolbar"
+                    data-bs-placement="top" data-bs-title="Stop Animation (Space)" data-bs-container="#fullscreenToolbar"
                     data-bs-delay='{"show":1000,"hide":100}'><span><i
                         class="fa-classic fa-solid fa-stop"></i></span></button>
                   <button data-action="forward" class="btn btn-outline-primary" data-bs-toggle="tooltip"
-                    data-bs-placement="top" data-bs-title="Play Forward" data-bs-container="#fullscreenToolbar"
+                    data-bs-placement="top" data-bs-title="Play Forward (Space)" data-bs-container="#fullscreenToolbar"
                     data-bs-delay='{"show":1000,"hide":100}'><span><i
                         class="fa-classic fa-solid fa-caret-right fa-lg"></i></span></button>
                 </div>
-                <div class="btn-group btn-group-sm" role="group" aria-label="Share and export">
-                  <button data-action="copyUrl" class="btn btn-outline-primary" data-bs-toggle="tooltip"
-                    data-bs-placement="top" data-bs-title="Copy Settings URL" data-bs-container="#fullscreenToolbar"
-                    data-bs-delay='{"show":1000,"hide":100}'><span><i
-                        class="fa-classic fa-solid fa-link"></i></span></button>
-                  <button data-action="copyImage" class="btn btn-outline-primary" data-bs-toggle="tooltip"
-                    data-bs-placement="top" data-bs-title="Copy Image" data-bs-container="#fullscreenToolbar"
-                    data-bs-delay='{"show":1000,"hide":100}'><span><i
-                        class="fa-classic fa-solid fa-copy"></i></span></button>
-                  <button data-action="downloadImage" class="btn btn-outline-primary" data-bs-toggle="tooltip"
-                    data-bs-placement="top" data-bs-title="Download Image" data-bs-container="#fullscreenToolbar"
-                    data-bs-delay='{"show":1000,"hide":100}'><span><i
-                        class="fa-classic fa-solid fa-camera"></i></span></button>
-                  <button data-action="record" class="btn btn-outline-primary" data-bs-toggle="tooltip"
-                    data-bs-placement="top" data-bs-title="Record Video" data-bs-container="#fullscreenToolbar"
-                    data-bs-delay='{"show":1000,"hide":100}'><span><i
-                        class="fa-classic fa-solid fa-video"></i></span></button>
+                <div class="position-relative">
+                  <div class="btn-group btn-group-sm" role="group" aria-label="Share and export">
+                    <button data-action="copyUrl" class="btn btn-outline-primary" data-bs-toggle="tooltip"
+                      data-bs-placement="top" data-bs-title="Copy Settings URL" data-bs-container="#fullscreenToolbar"
+                      data-bs-delay='{"show":1000,"hide":100}'><span><i
+                          class="fa-classic fa-solid fa-link"></i></span></button>
+                    <button data-action="copyImage" class="btn btn-outline-primary" data-bs-toggle="tooltip"
+                      data-bs-placement="top" data-bs-title="Copy Image" data-bs-container="#fullscreenToolbar"
+                      data-bs-delay='{"show":1000,"hide":100}'><span><i
+                          class="fa-classic fa-solid fa-copy"></i></span></button>
+                    <button data-action="downloadImage" class="btn btn-outline-primary" data-bs-toggle="tooltip"
+                      data-bs-placement="top" data-bs-title="Download Image" data-bs-container="#fullscreenToolbar"
+                      data-bs-delay='{"show":1000,"hide":100}'><span><i
+                          class="fa-classic fa-solid fa-camera"></i></span></button>
+                    <button data-action="record" class="btn btn-outline-primary" data-bs-toggle="tooltip"
+                      data-bs-placement="top" data-bs-title="Record Video" data-bs-container="#fullscreenToolbar"
+                      data-bs-delay='{"show":1000,"hide":100}'><span><i
+                          class="fa-classic fa-solid fa-video"></i></span></button>
+                  </div>
+                  <span class="recording-timer badge text-bg-danger d-none">5:00</span>
                 </div>
-                <span class="recording-timer badge text-bg-danger d-none">5:00</span>
                 <div class="btn-group btn-group-sm" role="group" aria-label="View">
                   <button data-action="randomize" class="btn btn-outline-primary" data-bs-toggle="tooltip"
                     data-bs-placement="top" data-bs-title="Random Settings (R)" data-bs-container="#fullscreenToolbar"
@@ -238,7 +301,7 @@
                         class="fa-classic fa-solid fa-sun"></i></span><span class="theme-icon-dark"
                       style="display: none"><i class="fa-classic fa-solid fa-moon"></i></span></button>
                   <button data-action="fullscreen" class="btn btn-outline-primary" data-bs-toggle="tooltip"
-                    data-bs-placement="top" data-bs-title="Exit Fullscreen" data-bs-container="#fullscreenToolbar"
+                    data-bs-placement="top" data-bs-title="Exit Fullscreen (F)" data-bs-container="#fullscreenToolbar"
                     data-bs-delay='{"show":1000,"hide":100}'><span><i class="fa-classic fa-solid fa-compress"></i>
                       Exit</span></button>
                 </div>
@@ -277,7 +340,7 @@
       { key: 'plotSpeed', param: 'PlotSpeed', label: 'Plot Speed', min: 1, max: 20, step: 1, value: 15, digits: 0,
         help: 'How fast the Loop Multiplier changes while animating. Every 3 steps doubles the speed.' },
       { key: 'multiplier', param: 'Multiplier', label: 'Loop Multiplier', min: 0, max: 20, step: 0.0001, value: 1.3, digits: 4,
-        help: 'Sets the shape of the pattern; animating sweeps through it. Use ←/→ to nudge it.' },
+        help: 'Sets the shape of the pattern; animating sweeps through it. Fine-tune with ←/→, the scroll wheel, or by dragging across the canvas.' },
       { key: 'fadeEffect', param: 'FadeEffect', label: 'Fade Effect', min: 0.001, max: 0.5, step: 0.001, value: 0.05, digits: 3,
         help: 'How quickly old lines fade while animating. Lower values leave longer trails.' }
     ];
@@ -316,6 +379,7 @@
     // Multiplier units per second at Plot Speed 15; each 3 steps of Plot Speed doubles or halves the rate
     const BASE_SPEED = 0.006;
     const RECORDING_SECONDS = 300;
+    const HISTORY_LIMIT = 100; // Undo steps kept
 
     class SpiroGraph {
       constructor() {
@@ -332,6 +396,9 @@
           tooltips: [], // Filled in by init()
           actionButtons: document.querySelectorAll('[data-action]'),
           recordButtons: document.querySelectorAll('[data-action="record"]'),
+          undoButtons: document.querySelectorAll('[data-action="undo"]'),
+          redoButtons: document.querySelectorAll('[data-action="redo"]'),
+          themeColor: document.querySelector('meta[name="theme-color"]'),
           timers: document.querySelectorAll('.recording-timer'),
           fullscreenToolbar: document.getElementById('fullscreenToolbar'),
           canvasDiv: document.getElementById('canvasDiv'),
@@ -361,6 +428,13 @@
         this.bandColors = null; // Cached { key, colors } from getBandColors()
         this.lastPreset = null; // Index of the last matched preset, for the "(modified)" label
 
+        // Undo history of settings snapshots (theme excluded). `committed` is the state the next undo step returns from.
+        this.history = [];
+        this.future = [];
+        this.committed = null;
+        this.checkpointTimeout = null;
+        this.dragX = null; // Last pointer x while dragging on the canvas
+
         this.animationId = null;
         this.lastFrameTime = 0;
         this.mediaRecorder = null;
@@ -380,6 +454,7 @@
         this.buildStyleControls();
         this.buildPresetOptions();
         this.loadSettings();
+        this.committed = this.getSnapshot();
         this.applyTheme();
         this.setupEventListeners();
         this.resizeCanvas();
@@ -388,10 +463,23 @@
         this.updateButtonStates();
         this.draw();
 
+        // Icon-only buttons take their accessible name from the tooltip text
+        document.querySelectorAll('[data-bs-title]').forEach(el => {
+          if (!el.textContent.trim() && !el.hasAttribute('aria-label')) el.setAttribute('aria-label', el.dataset.bsTitle);
+        });
+
         // Initialize Tooltips
         this.ui.tooltips = [...document.querySelectorAll('[data-bs-toggle="tooltip"]')]
           .map(el => ({ el, tooltip: new bootstrap.Tooltip(el) }));
         this.applyHelp();
+        this.updateHistoryButtons();
+      }
+
+      // Change a tooltip's text (and the matching accessible name) after it has been created
+      setTooltip(el, title) {
+        el.dataset.bsTitle = title;
+        el.setAttribute('aria-label', title);
+        bootstrap.Tooltip.getInstance(el)?.setContent({ '.tooltip-inner': title });
       }
 
       // Help on: tooltips, form-text help and the shortcuts list. The help button keeps its tooltip so it stays discoverable.
@@ -439,15 +527,16 @@
             // Help text only in the main panel; the fullscreen panel stays compact
             const help = compact ? '' : `<div id="${id}Help" class="form-text help-text mt-0">${slider.help}</div>`;
             row.innerHTML = `
-              <div class="d-flex justify-content-between align-items-baseline${compact ? ' small' : ''}">
+              <div class="d-flex justify-content-between align-items-baseline">
                 <label for="${id}" class="form-label mb-0">${slider.label}</label>
-                <span class="slider-value" aria-hidden="true"></span>
+                <input type="text" inputmode="decimal" class="slider-value" aria-label="${slider.label} value"
+                  autocomplete="off" spellcheck="false">
               </div>
               <input type="range" class="form-range" id="${id}" min="${slider.min}" max="${slider.max}" step="${slider.step}"${compact ? '' : ` aria-describedby="${id}Help"`}>
               ${help}`;
             container.appendChild(row);
 
-            this.ui.sliders[slider.key].inputs.push(row.querySelector('input'));
+            this.ui.sliders[slider.key].inputs.push(row.querySelector('input[type="range"]'));
             this.ui.sliders[slider.key].outputs.push(row.querySelector('.slider-value'));
           }
         }
@@ -463,7 +552,7 @@
           const prefix = compact ? 'fs-' : '';
           const describedBy = compact ? '' : ' aria-describedby="styleHelp"';
           const row = document.createElement('div');
-          row.className = compact ? 'mb-2 small' : 'mb-3';
+          row.className = compact ? 'mb-2' : 'mb-3';
           row.innerHTML = `
             <div class="d-flex align-items-end gap-3">
               <div class="flex-grow-1">
@@ -506,14 +595,73 @@
         if (select.value !== value) select.value = value;
       }
 
-      // Load a preset or random settings
-      loadSettingsSet(values) {
+      // Load a preset, random settings, defaults or an undo step
+      loadSettingsSet(values, record = true) {
         this.applySettings(values);
         this.updateSliderUI();
         this.updateStyleUI();
         this.saveSettings();
         this.clearCanvas(); // Don't fade from the previous drawing
         this.draw();
+        if (record) this.checkpoint();
+      }
+
+      reset() {
+        this.lastPreset = null;
+        this.loadSettingsSet({
+          ...Object.fromEntries(SLIDERS.map(slider => [slider.param, slider.value])),
+          ColorMode: 'mono',
+          Glow: false
+        });
+        this.showToast('Settings Reset', 'All settings are back to their defaults.\nPress Ctrl+Z (⌘Z on Mac) to undo.');
+      }
+
+      // Settings that undo/redo cover; the theme is a view preference, so it's left out
+      getSnapshot() {
+        const { Theme, ...settings } = this.getSettings();
+        return settings;
+      }
+
+      // Record the current settings as an undo step if they changed since the last one
+      checkpoint() {
+        clearTimeout(this.checkpointTimeout);
+        this.checkpointTimeout = null;
+        const now = this.getSnapshot();
+        if (JSON.stringify(now) === JSON.stringify(this.committed)) return;
+        this.history.push(this.committed);
+        if (this.history.length > HISTORY_LIMIT) this.history.shift();
+        this.committed = now;
+        this.future = [];
+        this.updateHistoryButtons();
+      }
+
+      // Continuous changes (wheel, arrow keys) become one undo step once they pause
+      scheduleCheckpoint() {
+        clearTimeout(this.checkpointTimeout);
+        this.checkpointTimeout = setTimeout(() => this.checkpoint(), 500);
+      }
+
+      undo() {
+        this.checkpoint(); // Keep any pending change so redo can return to it
+        if (!this.history.length) return;
+        this.future.push(this.committed);
+        this.committed = this.history.pop();
+        this.loadSettingsSet(this.committed, false);
+        this.updateHistoryButtons();
+      }
+
+      redo() {
+        this.checkpoint();
+        if (!this.future.length) return;
+        this.history.push(this.committed);
+        this.committed = this.future.pop();
+        this.loadSettingsSet(this.committed, false);
+        this.updateHistoryButtons();
+      }
+
+      updateHistoryButtons() {
+        this.ui.undoButtons.forEach(button => button.disabled = !this.history.length);
+        this.ui.redoButtons.forEach(button => button.disabled = !this.future.length);
       }
 
       randomize() {
@@ -584,6 +732,7 @@
         const theme = THEMES[this.state.theme];
         const isLight = this.state.theme === 'light';
         document.documentElement.setAttribute('data-bs-theme', this.state.theme);
+        this.ui.themeColor.setAttribute('content', theme.background); // Browser and installed-app title bar
         document.querySelectorAll('.theme-icon-light').forEach(el => el.style.display = isLight ? 'block' : 'none');
         document.querySelectorAll('.theme-icon-dark').forEach(el => el.style.display = isLight ? 'none' : 'block');
         this.ui.fullscreenToolbar.style.backgroundColor = theme.panel;
@@ -597,6 +746,18 @@
         for (const slider of SLIDERS) {
           for (const input of this.ui.sliders[slider.key].inputs) {
             input.addEventListener('input', (e) => this.handleInput(slider.key, e.target.value));
+            input.addEventListener('change', () => this.checkpoint()); // Released, so one undo step per drag
+          }
+          for (const output of this.ui.sliders[slider.key].outputs) {
+            output.addEventListener('change', () => this.commitValue(slider, output));
+            output.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter') {
+                output.blur(); // Commits through the change event
+              } else if (e.key === 'Escape') {
+                output.value = this.state[slider.key].toFixed(slider.digits);
+                output.blur();
+              }
+            });
           }
         }
 
@@ -612,6 +773,9 @@
           downloadImage: () => this.downloadImage(),
           record: () => this.toggleRecording(),
           randomize: () => this.randomize(),
+          reset: () => this.reset(),
+          undo: () => this.undo(),
+          redo: () => this.redo(),
           fullscreen: () => this.toggleFullScreen()
         };
         this.ui.actionButtons.forEach(button => {
@@ -648,6 +812,33 @@
 
         document.addEventListener('keydown', (e) => this.handleKeyDown(e));
 
+        // Scroll or drag sideways on the canvas to fine-tune the multiplier (Shift for bigger steps)
+        const canvas = this.ui.canvas;
+        canvas.addEventListener('wheel', (e) => {
+          if (e.ctrlKey) return; // Trackpad pinch zoom
+          e.preventDefault();
+          const delta = (e.deltaY || e.deltaX) * (e.deltaMode === 1 ? 16 : 1); // Lines to pixels
+          this.nudgeMultiplier(-delta * (e.shiftKey ? 0.0002 : 0.00002));
+        }, { passive: false });
+        canvas.addEventListener('pointerdown', (e) => {
+          if (e.button !== 0) return;
+          this.dragX = e.clientX;
+          canvas.setPointerCapture(e.pointerId);
+        });
+        canvas.addEventListener('pointermove', (e) => {
+          if (this.dragX === null) return;
+          const dx = e.clientX - this.dragX;
+          this.dragX = e.clientX;
+          if (dx) this.nudgeMultiplier(dx * (e.shiftKey ? 0.005 : 0.0005));
+        });
+        for (const type of ['pointerup', 'pointercancel']) {
+          canvas.addEventListener(type, () => {
+            if (this.dragX === null) return;
+            this.dragX = null;
+            this.checkpoint();
+          });
+        }
+
         // Window
         window.addEventListener('resize', () => {
           this.resizeCanvas();
@@ -673,7 +864,32 @@
         }
       }
 
+      // Typed slider value: clamp to the slider range, or restore the current value if it isn't a number
+      commitValue(slider, output) {
+        const value = parseFloat(output.value);
+        if (!isNaN(value)) {
+          this.handleInput(slider.key, Math.min(Math.max(value, slider.min), slider.max));
+          this.checkpoint();
+        }
+        output.value = this.state[slider.key].toFixed(slider.digits);
+      }
+
+      nudgeMultiplier(delta) {
+        this.handleInput('multiplier', Math.min(Math.max(this.state.multiplier + delta, 0), MULTIPLIER_MAX));
+        this.scheduleCheckpoint();
+      }
+
       handleKeyDown(e) {
+        // Undo / redo: Ctrl+Z, Ctrl+Shift+Z or Ctrl+Y (Cmd on Mac). Text fields keep their own undo.
+        const key = e.key.toLowerCase();
+        if ((e.ctrlKey || e.metaKey) && !e.altKey && (key === 'z' || key === 'y')) {
+          if (e.target.closest('input[type="text"], textarea')) return;
+          e.preventDefault();
+          if (key === 'y' || e.shiftKey) this.redo();
+          else this.undo();
+          return;
+        }
+
         if (e.ctrlKey || e.metaKey || e.altKey) return;
         if (e.target.closest('input, textarea, select')) return;
 
@@ -709,9 +925,7 @@
           case 'ArrowLeft':
           case 'ArrowRight': {
             e.preventDefault();
-            const step = (e.shiftKey ? 0.01 : 0.0001) * (e.key === 'ArrowRight' ? 1 : -1);
-            const value = Math.min(Math.max(this.state.multiplier + step, 0), MULTIPLIER_MAX);
-            this.handleInput('multiplier', value);
+            this.nudgeMultiplier((e.shiftKey ? 0.01 : 0.0001) * (e.key === 'ArrowRight' ? 1 : -1));
             break;
           }
         }
@@ -723,7 +937,9 @@
           const value = this.state[key];
           const text = value.toFixed(slider.digits);
           for (const input of this.ui.sliders[key].inputs) input.value = value;
-          for (const output of this.ui.sliders[key].outputs) output.textContent = text;
+          for (const output of this.ui.sliders[key].outputs) {
+            if (output !== document.activeElement) output.value = text; // Don't overwrite a value being typed
+          }
         }
         this.updatePresetUI();
       }
@@ -735,6 +951,7 @@
         if (!this.state.isLoopRunning) {
           this.draw();
         }
+        this.checkpoint();
       }
 
       updateStyleUI() {
@@ -769,6 +986,7 @@
           button.classList.toggle('btn-danger', this.state.isRecording);
           button.classList.toggle('btn-outline-primary', !this.state.isRecording);
           button.innerHTML = `<span><i class="fa-classic fa-solid ${icon}"></i></span>`;
+          this.setTooltip(button, this.state.isRecording ? 'Stop Recording' : 'Record Video');
         });
       }
 
@@ -921,6 +1139,7 @@
         }
         this.updateButtonStates();
         this.saveSettings();
+        this.checkpoint();
 
         if (this.state.isRecording) {
           this.stopRecording();
@@ -997,7 +1216,11 @@
       startTimer(durationSeconds) {
         const endTime = Date.now() + durationSeconds * 1000;
         this.updateTimerDisplay(durationSeconds);
-        this.ui.timers.forEach(timer => timer.classList.remove('d-none'));
+        this.ui.timers.forEach(timer => {
+          const recordButton = timer.parentElement.querySelector('[data-action="record"]');
+          timer.style.right = `${recordButton.offsetWidth / 2}px`; // Center under the record button
+          timer.classList.remove('d-none');
+        });
 
         this.timerInterval = setInterval(() => {
           const remaining = Math.max(Math.ceil((endTime - Date.now()) / 1000), 0);

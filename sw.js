@@ -1,6 +1,7 @@
-// Offline support: serve from cache immediately, refresh the cache from the network in the background.
-// Bump CACHE_NAME when the asset list changes so old caches are cleaned up.
-const CACHE_NAME = 'spirojs-v1';
+// Offline support. Pages are network-first so a new version shows on the next load; other assets are served
+// from the cache immediately and refreshed from the network in the background.
+// Bump CACHE_NAME when the asset list or caching strategy changes so old caches are cleaned up.
+const CACHE_NAME = 'spirojs-v2';
 
 const ASSETS = [
   './',
@@ -35,6 +36,18 @@ self.addEventListener('fetch', (event) => {
   // Pages are opened with settings in the query string; cache them under the bare page URL
   const url = new URL(request.url);
   const cacheKey = request.mode === 'navigate' ? url.origin + url.pathname : request;
+
+  if (request.mode === 'navigate') {
+    event.respondWith(caches.open(CACHE_NAME).then(cache =>
+      fetch(request)
+        .then((response) => {
+          if (response.ok) cache.put(cacheKey, response.clone());
+          return response;
+        })
+        .catch(async () => (await cache.match(cacheKey)) || Response.error())
+    ));
+    return;
+  }
 
   event.respondWith(caches.open(CACHE_NAME).then(async (cache) => {
     const cached = await cache.match(cacheKey);
