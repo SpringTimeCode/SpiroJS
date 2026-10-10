@@ -166,7 +166,7 @@
               <div class="mb-3">
                 <div class="d-flex gap-2">
                   <!-- Options are generated from PRESETS in the script below -->
-                  <select id="presetSelect" class="form-select form-select-sm" aria-label="Load a preset"
+                  <select id="presetSelect" class="preset-select form-select form-select-sm" aria-label="Load a preset"
                     aria-describedby="presetHelp">
                     <option value="" selected>Load a preset&hellip;</option>
                   </select>
@@ -257,6 +257,34 @@
             <div id="fullscreenSliders"
               class="d-none position-absolute top-50 start-0 translate-middle-y ms-3 p-3 rounded shadow"
               style="z-index: 1050; transition: opacity 0.5s ease-in-out; width: 300px; max-width: calc(100% - 2rem);">
+              <div class="mb-3">
+                <!-- Options are generated from PRESETS in the script below -->
+                <select class="preset-select form-select form-select-sm mb-2" aria-label="Load a preset">
+                  <option value="" selected>Load a preset&hellip;</option>
+                </select>
+                <div class="d-flex gap-2">
+                  <div class="btn-group btn-group-sm flex-grow-1" role="group" aria-label="History">
+                    <button data-action="undo" class="btn btn-outline-primary" data-bs-toggle="tooltip"
+                      data-bs-placement="top" data-bs-title="Undo (Ctrl/⌘+Z)" data-bs-container="#fullscreenSliders"
+                      data-bs-delay='{"show":1000,"hide":100}'><span><i
+                          class="fa-classic fa-solid fa-arrow-rotate-left"></i></span></button>
+                    <button data-action="redo" class="btn btn-outline-primary" data-bs-toggle="tooltip"
+                      data-bs-placement="top" data-bs-title="Redo (Ctrl/⌘+Shift+Z)" data-bs-container="#fullscreenSliders"
+                      data-bs-delay='{"show":1000,"hide":100}'><span><i
+                          class="fa-classic fa-solid fa-arrow-rotate-right"></i></span></button>
+                    <button data-action="reset" class="btn btn-outline-primary" data-bs-toggle="tooltip"
+                      data-bs-placement="top" data-bs-title="Reset to Defaults" data-bs-container="#fullscreenSliders"
+                      data-bs-delay='{"show":1000,"hide":100}'><span><i
+                          class="fa-classic fa-solid fa-eraser"></i></span></button>
+                  </div>
+                  <button data-action="randomize" class="btn btn-outline-primary btn-sm text-nowrap flex-shrink-0"
+                    aria-label="Random Settings" data-bs-toggle="tooltip" data-bs-placement="top"
+                    data-bs-title="Random Settings (R)" data-bs-container="#fullscreenSliders"
+                    data-bs-delay='{"show":1000,"hide":100}'><span><i class="fa-classic fa-solid fa-shuffle"></i>
+                      Random</span></button>
+                </div>
+              </div>
+              <!-- Sliders are appended here -->
             </div>
             <div id="fullscreenToolbar"
               class="d-none position-absolute bottom-0 start-50 translate-middle-x mb-3 p-2 rounded shadow"
@@ -298,10 +326,6 @@
                   <span class="recording-timer badge text-bg-danger d-none">5:00</span>
                 </div>
                 <div class="btn-group btn-group-sm" role="group" aria-label="View">
-                  <button data-action="randomize" class="btn btn-outline-primary" data-bs-toggle="tooltip"
-                    data-bs-placement="top" data-bs-title="Random Settings (R)" data-bs-container="#fullscreenToolbar"
-                    data-bs-delay='{"show":1000,"hide":100}'><span><i
-                        class="fa-classic fa-solid fa-shuffle"></i></span></button>
                   <button data-action="theme" class="btn btn-outline-primary" data-bs-toggle="tooltip"
                     data-bs-placement="top" data-bs-title="Toggle Theme" data-bs-container="#fullscreenToolbar"
                     data-bs-delay='{"show":1000,"hide":100}'><span class="theme-icon-light"><i
@@ -393,7 +417,7 @@
         // UI Elements
         this.ui = {
           settingsContent: document.getElementById('settingsContent'),
-          presetSelect: document.getElementById('presetSelect'),
+          presetSelects: document.querySelectorAll('.preset-select'), // Main and fullscreen panels
           mainSliders: document.getElementById('mainSliders'),
           fsSliders: document.getElementById('fullscreenSliders'),
           sliders: {}, // key -> { inputs, outputs }, filled in by buildSliders()
@@ -580,7 +604,9 @@
       }
 
       buildPresetOptions() {
-        PRESETS.forEach(({ label }, index) => this.ui.presetSelect.add(new Option(label, index)));
+        for (const select of this.ui.presetSelects) {
+          PRESETS.forEach(({ label }, index) => select.add(new Option(label, index)));
+        }
       }
 
       // Show the preset the current settings match. Once they drift (animation or edits), show
@@ -597,9 +623,10 @@
         const value = match >= 0 ? String(match) : '';
 
         // Called every animation frame, so only touch the DOM when something changed
-        const select = this.ui.presetSelect;
-        if (select.options[0].text !== placeholder) select.options[0].text = placeholder;
-        if (select.value !== value) select.value = value;
+        for (const select of this.ui.presetSelects) {
+          if (select.options[0].text !== placeholder) select.options[0].text = placeholder;
+          if (select.value !== value) select.value = value;
+        }
       }
 
       // Load a preset, random settings, defaults or an undo step
@@ -795,9 +822,11 @@
         for (const glowSwitch of this.ui.glowSwitches) {
           glowSwitch.addEventListener('change', (e) => this.setStyle('glow', e.target.checked));
         }
-        this.ui.presetSelect.addEventListener('change', (e) => {
-          if (e.target.value !== '') this.loadSettingsSet(PRESETS[e.target.value].settings);
-        });
+        for (const select of this.ui.presetSelects) {
+          select.addEventListener('change', (e) => {
+            if (e.target.value !== '') this.loadSettingsSet(PRESETS[e.target.value].settings);
+          });
+        }
 
         // Keep fullscreen controls visible while the pointer is over them
         for (const panel of [this.ui.fullscreenToolbar, this.ui.fsSliders]) {
