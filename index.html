@@ -18,6 +18,8 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
   <link rel="icon" type="image/png" sizes="32x32" href="FAVICON.PNG">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="theme-color" content="#212529">
   <style>
     /* Fixed-width digits so values don't jitter while animating */
     .slider-value,
@@ -75,6 +77,16 @@
           </div>
           <div class="card-body">
             <div id="settingsContent">
+              <div class="d-flex gap-2 mb-3">
+                <!-- Options are generated from PRESETS in the script below -->
+                <select id="presetSelect" class="form-select form-select-sm" aria-label="Load a preset">
+                  <option value="" selected>Load a preset&hellip;</option>
+                </select>
+                <button data-action="randomize" class="btn btn-outline-primary btn-sm text-nowrap"
+                  data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Random Settings (R)"
+                  data-bs-delay='{"show":1000,"hide":100}'><span><i class="fa-classic fa-solid fa-shuffle"></i>
+                    Random</span></button>
+              </div>
               <!-- Sliders are generated from SLIDERS in the script below -->
               <div id="mainSliders"></div>
               <div class="d-flex flex-wrap justify-content-center align-items-center gap-2">
@@ -118,7 +130,7 @@
               </div>
               <div class="text-center small text-body-secondary mt-3">
                 Shortcuts: <kbd>Space</kbd> play/stop &middot; <kbd>F</kbd> fullscreen &middot;
-                <kbd>C</kbd> color mode &middot; <kbd>G</kbd> glow &middot;
+                <kbd>C</kbd> color mode &middot; <kbd>G</kbd> glow &middot; <kbd>R</kbd> random &middot;
                 <kbd>&larr;</kbd>/<kbd>&rarr;</kbd> nudge multiplier (hold <kbd>Shift</kbd> for bigger steps)
               </div>
             </div>
@@ -174,6 +186,10 @@
                 </div>
                 <span class="recording-timer badge text-bg-danger d-none">5:00</span>
                 <div class="btn-group btn-group-sm" role="group" aria-label="View">
+                  <button data-action="randomize" class="btn btn-outline-primary" data-bs-toggle="tooltip"
+                    data-bs-placement="top" data-bs-title="Random Settings (R)" data-bs-container="#fullscreenToolbar"
+                    data-bs-delay='{"show":1000,"hide":100}'><span><i
+                        class="fa-classic fa-solid fa-shuffle"></i></span></button>
                   <button data-action="theme" class="btn btn-outline-primary" data-bs-toggle="tooltip"
                     data-bs-placement="top" data-bs-title="Toggle Theme" data-bs-container="#fullscreenToolbar"
                     data-bs-delay='{"show":1000,"hide":100}'><span class="theme-icon-light"><i
@@ -231,6 +247,20 @@
     };
     const COLOR_BANDS = 96; // Each band is one stroked path, so this trades smoothness for draw calls
 
+    // Curated starting points; settings not listed (size, speed, fade, line width, theme) are left as-is
+    const PRESETS = [
+      { label: 'Classic', settings: { Multiplier: 1.3, LineLength: 0.15, Saturation: 50, ColorMode: 'mono', Glow: false } },
+      { label: 'Daisy', settings: { Multiplier: 2.5, LineLength: 0.15, Saturation: 50, ColorMode: 'sunset', Glow: false } },
+      { label: 'Four-Leaf', settings: { Multiplier: 2.0005, LineLength: 0.03, Saturation: 80, ColorMode: 'rainbow', Glow: true } },
+      { label: 'Golden Lattice', settings: { Multiplier: 1.618, LineLength: 0.05, Saturation: 120, ColorMode: 'sunset', Glow: false } },
+      { label: 'Chrysanthemum', settings: { Multiplier: 4.5, LineLength: 0.3, Saturation: 360, ColorMode: 'sunset', Glow: true } },
+      { label: 'Nested Rings', settings: { Multiplier: 0.25, LineLength: 0.5, Saturation: 360, ColorMode: 'ocean', Glow: true } },
+      { label: 'Sea Urchin', settings: { Multiplier: 12.5, LineLength: 0.05, Saturation: 40, ColorMode: 'ocean', Glow: false } },
+      { label: 'Hexagram', settings: { Multiplier: 1.5, LineLength: 2.4, Saturation: 360, ColorMode: 'rainbow', Glow: false } },
+      { label: 'Starburst', settings: { Multiplier: 11, LineLength: 0.33, Saturation: 180, ColorMode: 'rainbow', Glow: true } },
+      { label: 'Woven', settings: { Multiplier: 6.5, LineLength: 1.1, Saturation: 360, ColorMode: 'rainbow', Glow: false } }
+    ];
+
     const STORAGE_KEY = 'spirojs-settings';
     const MULTIPLIER_MAX = 20;
     // Multiplier units per second at Plot Speed 15; each 3 steps of Plot Speed doubles or halves the rate
@@ -242,6 +272,7 @@
         // UI Elements
         this.ui = {
           settingsContent: document.getElementById('settingsContent'),
+          presetSelect: document.getElementById('presetSelect'),
           mainSliders: document.getElementById('mainSliders'),
           fsSliders: document.getElementById('fullscreenSliders'),
           sliders: {}, // key -> { inputs, outputs }, filled in by buildSliders()
@@ -293,6 +324,7 @@
       init() {
         this.buildSliders();
         this.buildStyleControls();
+        this.buildPresetOptions();
         this.loadSettings();
         this.applyTheme();
         this.setupEventListeners();
@@ -359,47 +391,61 @@
         }
       }
 
+      buildPresetOptions() {
+        PRESETS.forEach(({ label }, index) => this.ui.presetSelect.add(new Option(label, index)));
+      }
+
+      // Load a preset or random settings, then reset the menu so the same preset can be picked again
+      loadSettingsSet(values) {
+        this.applySettings(values);
+        this.ui.presetSelect.value = '';
+        this.updateSliderUI();
+        this.updateStyleUI();
+        this.saveSettings();
+        this.clearCanvas(); // Don't fade from the previous drawing
+        this.draw();
+      }
+
+      randomize() {
+        const random = (min, max, digits) => Number((min + Math.random() * (max - min)).toFixed(digits));
+        const modes = Object.keys(COLOR_MODES);
+        this.loadSettingsSet({
+          Multiplier: random(0.2, 16, 4),
+          LineLength: random(0.02, 1.5, 3),
+          Saturation: random(40, 360, 0),
+          LineWidth: random(0.5, 2, 1),
+          ColorMode: modes[Math.floor(Math.random() * modes.length)],
+          Glow: Math.random() < 0.3
+        });
+      }
+
       // Priority: URL params, then saved settings, then defaults
       loadSettings() {
-        let saved = {};
         try {
-          saved = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+          this.applySettings(JSON.parse(localStorage.getItem(STORAGE_KEY)) || {});
         } catch (err) {
           console.warn('Could not read saved settings:', err);
         }
-        const urlParams = new URLSearchParams(window.location.search);
+        this.applySettings(Object.fromEntries(new URLSearchParams(window.location.search)));
+      }
 
+      // Apply settings keyed by param name (URL, saved settings or a preset), ignoring missing or invalid values
+      applySettings(values) {
         for (const slider of SLIDERS) {
-          for (const raw of [urlParams.get(slider.param), saved[slider.param]]) {
-            if (raw === null || raw === undefined) continue;
-            const val = parseFloat(raw);
-            if (!isNaN(val) && val >= slider.min && val <= slider.max) {
-              this.state[slider.key] = val;
-              break;
-            }
+          const val = parseFloat(values[slider.param]);
+          if (!isNaN(val) && val >= slider.min && val <= slider.max) {
+            this.state[slider.key] = val;
           }
         }
 
-        for (const raw of [urlParams.get('Theme'), saved.Theme]) {
-          const theme = typeof raw === 'string' ? raw.toLowerCase() : null;
-          if (theme === 'dark' || theme === 'light') {
-            this.state.theme = theme;
-            break;
-          }
-        }
+        const theme = String(values.Theme).toLowerCase();
+        if (theme === 'dark' || theme === 'light') this.state.theme = theme;
 
-        for (const raw of [urlParams.get('ColorMode'), saved.ColorMode]) {
-          const mode = typeof raw === 'string' ? raw.toLowerCase() : null;
-          if (mode && Object.hasOwn(COLOR_MODES, mode)) {
-            this.state.colorMode = mode;
-            break;
-          }
-        }
+        const mode = String(values.ColorMode).toLowerCase();
+        if (Object.hasOwn(COLOR_MODES, mode)) this.state.colorMode = mode;
 
-        for (const raw of [urlParams.get('Glow'), saved.Glow]) {
-          if (raw === null || raw === undefined) continue;
-          this.state.glow = raw === true || raw === 'true' || raw === '1';
-          break;
+        if (values.Glow !== undefined && values.Glow !== null) {
+          this.state.glow = values.Glow === true || values.Glow === 'true' || values.Glow === '1';
         }
       }
 
@@ -452,6 +498,7 @@
           copyImage: () => this.copyImage(),
           downloadImage: () => this.downloadImage(),
           record: () => this.toggleRecording(),
+          randomize: () => this.randomize(),
           fullscreen: () => this.toggleFullScreen()
         };
         this.ui.actionButtons.forEach(button => {
@@ -464,6 +511,9 @@
         for (const glowSwitch of this.ui.glowSwitches) {
           glowSwitch.addEventListener('change', (e) => this.setStyle('glow', e.target.checked));
         }
+        this.ui.presetSelect.addEventListener('change', (e) => {
+          if (e.target.value !== '') this.loadSettingsSet(PRESETS[e.target.value].settings);
+        });
 
         // Keep fullscreen controls visible while the pointer is over them
         for (const panel of [this.ui.fullscreenToolbar, this.ui.fsSliders]) {
@@ -534,6 +584,10 @@
           case 'g':
           case 'G':
             this.setStyle('glow', !this.state.glow);
+            break;
+          case 'r':
+          case 'R':
+            this.randomize();
             break;
           case 'ArrowLeft':
           case 'ArrowRight': {
@@ -1109,6 +1163,18 @@
     document.addEventListener('DOMContentLoaded', () => {
       window.spiroGraph = new SpiroGraph();
     });
+
+    // Installable/offline app support. Manifests and service workers need http(s), so skip when opened as a local file.
+    if (location.protocol === 'http:' || location.protocol === 'https:') {
+      const manifest = document.createElement('link');
+      manifest.rel = 'manifest';
+      manifest.href = 'manifest.webmanifest';
+      document.head.appendChild(manifest);
+
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(err => console.warn('Service worker registration failed:', err));
+      }
+    }
 
   </script>
 </body>
