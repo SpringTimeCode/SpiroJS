@@ -1,14 +1,20 @@
 # SpiroJS - Animated Spiral Circle Graphs
 
+[![Validate HTML](https://github.com/SpringTimeCode/SpiroJS/actions/workflows/validate.yml/badge.svg)](https://github.com/SpringTimeCode/SpiroJS/actions/workflows/validate.yml)
+
 SpiroJS draws animated spiral circle graphs using sine and cosine trigonometry functions. It uses JavaScript, Font Awesome, and Bootstrap 5.
 
 This is code converted from my original 1982 Commodore 64 Basic program.
 
-![SpiroJS drawing a rainbow spiral with glow in dark mode](docs/screenshot.jpg)
+**[Try it live](https://springtimecode.github.io/SpiroJS/)**
+
+[![SpiroJS drawing a rainbow spiral with glow in dark mode](docs/screenshot.jpg)](https://springtimecode.github.io/SpiroJS/)
 
 ## Running it
 
-This will run locally without the need of a web server. Just download, extract, and open the `index.html` file.
+The easiest way is the [live version on GitHub Pages](https://springtimecode.github.io/SpiroJS/).
+
+It also runs locally without the need of a web server. Just download, extract, and open the `index.html` file.
 
 When served over `http(s)`, SpiroJS can also be installed as an app and works offline after the first visit.
 

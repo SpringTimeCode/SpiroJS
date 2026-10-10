@@ -1,0 +1,21 @@
+name: Validate HTML
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: Validate index.html
+        run: npx --yes html-validate index.html
+      - name: Check service worker and manifest parse
+        run: |
+          node --check sw.js
+          node -e "JSON.parse(require('fs').readFileSync('manifest.webmanifest', 'utf8'))"

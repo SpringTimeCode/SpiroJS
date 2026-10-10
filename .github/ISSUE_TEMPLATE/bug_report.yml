@@ -1,0 +1,35 @@
+name: Bug report
+description: Something isn't drawing, animating or exporting the way it should
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: If it depends on the plot, paste the link from **Copy Settings URL**.
+      placeholder: |
+        1. Open ...
+        2. Click ...
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and OS
+      placeholder: e.g. Chrome 140 on macOS, Safari on iOS 26
+    validations:
+      required: true
+  - type: dropdown
+    id: how
+    attributes:
+      label: How are you running it?
+      options:
+        - GitHub Pages (live site)
+        - Installed app
+        - Local file (opened index.html directly)
+        - Other web server
