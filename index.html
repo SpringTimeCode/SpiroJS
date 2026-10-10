@@ -306,6 +306,7 @@
         this.cssWidth = 0;
         this.cssHeight = 0;
         this.bandColors = null; // Cached { key, colors } from getBandColors()
+        this.lastPreset = null; // Index of the last matched preset, for the "(modified)" label
 
         this.animationId = null;
         this.lastFrameTime = 0;
@@ -395,10 +396,28 @@
         PRESETS.forEach(({ label }, index) => this.ui.presetSelect.add(new Option(label, index)));
       }
 
-      // Load a preset or random settings, then reset the menu so the same preset can be picked again
+      // Show the preset the current settings match. Once they drift (animation or edits), show
+      // "<preset> (modified)" on the placeholder instead, so picking the preset again fires a change and resets it.
+      updatePresetUI() {
+        const settings = this.getSettings();
+        const match = PRESETS.findIndex(preset =>
+          Object.entries(preset.settings).every(([param, value]) => settings[param] === value));
+        if (match >= 0) this.lastPreset = match;
+
+        const placeholder = match < 0 && this.lastPreset !== null
+          ? `${PRESETS[this.lastPreset].label} (modified)`
+          : 'Load a preset…';
+        const value = match >= 0 ? String(match) : '';
+
+        // Called every animation frame, so only touch the DOM when something changed
+        const select = this.ui.presetSelect;
+        if (select.options[0].text !== placeholder) select.options[0].text = placeholder;
+        if (select.value !== value) select.value = value;
+      }
+
+      // Load a preset or random settings
       loadSettingsSet(values) {
         this.applySettings(values);
-        this.ui.presetSelect.value = '';
         this.updateSliderUI();
         this.updateStyleUI();
         this.saveSettings();
@@ -409,6 +428,7 @@
       randomize() {
         const random = (min, max, digits) => Number((min + Math.random() * (max - min)).toFixed(digits));
         const modes = Object.keys(COLOR_MODES);
+        this.lastPreset = null; // Random settings aren't a modified preset
         this.loadSettingsSet({
           Multiplier: random(0.2, 16, 4),
           LineLength: random(0.02, 1.5, 3),
@@ -608,6 +628,7 @@
           for (const input of this.ui.sliders[key].inputs) input.value = value;
           for (const output of this.ui.sliders[key].outputs) output.textContent = text;
         }
+        this.updatePresetUI();
       }
 
       setStyle(key, value) {
@@ -622,6 +643,7 @@
       updateStyleUI() {
         for (const select of this.ui.colorModeSelects) select.value = this.state.colorMode;
         for (const glowSwitch of this.ui.glowSwitches) glowSwitch.checked = this.state.glow;
+        this.updatePresetUI();
       }
 
       updateButtonStates() {
